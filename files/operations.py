@@ -282,7 +282,7 @@ def download_file(context: OperationContext) -> dict[str, Any]:
 
 def upload_file(context: OperationContext) -> dict[str, Any]:
     raw = context.input
-    handle = paths.bounded_text(raw.get("artifact_handle"), field="artifact_handle", maximum=512)
+    handle = paths.artifact_handle_input(raw.get("artifact_handle"))
     folder_item, folder_path = paths.item_address(
         raw, id_field="folder_id", path_field="folder_path", required=False
     )

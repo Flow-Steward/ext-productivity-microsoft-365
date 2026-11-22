@@ -8,6 +8,7 @@ SharePoint rejects is refused here before any request is made.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import quote
 
@@ -119,6 +120,18 @@ def bounded_text(value: Any, *, field: str, maximum: int, required: bool = True)
     ):
         raise M365Error("invalid_payload", f"{field} must be non-empty text up to {maximum} chars")
     return value.strip()
+
+
+def artifact_handle_input(value: Any) -> str:
+    """A step's file input: a handle, or Core's file object (``artifact_id`` / ``artifact_handle``).
+
+    A workflow file input (``state.inputs.<file>``) arrives as an object with
+    ``artifact_id``, ``filename`` and ``size_bytes``; a mapped step output arrives as the
+    handle text. Both name the same artifact.
+    """
+    if isinstance(value, Mapping):
+        value = value.get("artifact_handle") or value.get("artifact_id")
+    return bounded_text(value, field="artifact_handle", maximum=512)
 
 
 # -- Graph paths --------------------------------------------------------------
