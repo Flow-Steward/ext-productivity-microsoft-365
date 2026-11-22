@@ -255,3 +255,12 @@ def test_webhook_route_naming_a_channel_is_refused() -> None:
     )
     assert response["error_code"] == "notification_connection_incompatible"
     assert response["definitely_no_external_effect"] is True
+
+
+def test_core_channel_id_on_a_webhook_route_is_refused_too() -> None:
+    response = run(
+        delivery(TEAMS_WEBHOOK, {"channel_id": "team-1/other"}),
+        None,
+        webhook_poster=lambda *_a, **_k: {"delivered": True},
+    )
+    assert response["error_code"] == "notification_connection_incompatible"

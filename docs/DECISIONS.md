@@ -118,7 +118,7 @@ deviation and live-verify lists are in `docs/v0.2-calendar-notes.md` and
 11. **Core compile is the real install check.** The catalog check does not run it; the
     install on a Core stand found invalid OAuth help codes, HTML help anchors and
     schema keywords Core does not execute (fixed in a32622c).
-12. **One signed-in account for every service (0.2.2, Vasily 2026-11-22).** The five
+12. **One signed-in account for every service (0.2.2, owner decision 2026-11-22).** The five
     delegated types (`m365_*_user`) became one `m365_user`. One sign-in requests every
     delegated permission, and the connection is shown and usable on every tab.
     - Admin consent is needed once, because of `ChannelMessage.Read.All`.

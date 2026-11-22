@@ -12,15 +12,9 @@ Logo: `icon.png` (the neutral Flow Steward package mark).
 
 ## Requirements
 
-- Flow Steward Core speaking `extension_host_v2`.
-- Installing needs the Core changes "Part A" of the Microsoft 365 task (background
-  polls that keep their connection and deliver each email exactly once; Core v0.9.23
-  rejects the manifest field `supported_events`).
-- Notifications, system email and installing v0.2 at all need the Core changes
-  "Part C" of the v0.2 task: per-connection-type notification targets, the explicit
-  system email sender, OAuth tokens and the idempotency key on delivery, and
-  `event.run_url`. Core v0.9.23 does not know the `notification` block on connection
-  types.
+- **Flow Steward Core 0.9.24 or later.** Older Core rejects this manifest: it needs
+  Core's crash-safe connection polls (new-mail trigger), notification targets per
+  connection type, the explicit system email sender, and delivery credentials and keys.
 - `flowsteward-extension-sdk` 0.4.0 (provided by the host).
 
 ## Two ways to connect

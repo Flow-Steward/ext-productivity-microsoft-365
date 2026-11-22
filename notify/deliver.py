@@ -71,6 +71,11 @@ def _incompatible(message: str) -> M365Error:
     return M365Error("notification_connection_incompatible", message, retryable=False)
 
 
+def _route_channel(route_config: Mapping[str, Any]) -> str:
+    """Core names the route's channel ``channel_id``; ``channel`` is an accepted alias."""
+    return text(route_config.get("channel_id") or route_config.get("channel"), limit=512)
+
+
 def _recipients(value: Any) -> list[Any]:
     if value is None:
         return []
@@ -129,7 +134,7 @@ def _deliver_mail(
     step_key: str,
     transport_factory: TransportFactory,
 ) -> dict[str, Any]:
-    if route_config.get("channel"):
+    if _route_channel(route_config):
         raise _incompatible("A mail connection takes recipients, not a channel")
     to = _recipients(route_config.get("to") or route_config.get("recipients"))
     if not to:
@@ -163,7 +168,7 @@ def _deliver_webhook(
     route_config: Mapping[str, Any],
     webhook_poster: ChannelPoster | None,
 ) -> dict[str, Any]:
-    if route_config.get("channel"):
+    if _route_channel(route_config):
         raise _incompatible("This webhook posts to its own channel; the route must not name one")
     context = resolve_connection(payload, service="teams")
     poster = webhook_poster or _default_webhook_poster()
