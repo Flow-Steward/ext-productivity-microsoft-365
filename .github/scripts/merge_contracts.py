@@ -63,7 +63,16 @@ manifest_path = root / "extension.yaml"
 manifest = yaml.safe_load(manifest_path.read_text())
 manifest["external_effects"] = effects
 manifest["workflow_triggers"] = triggers
-manifest["supported_events"] = events
+# Core derives the supported events from event_subscriptions (manifest v2 has no
+# supported_events field): keep the notification subscriptions, add each event a
+# service part emits.
+manifest.pop("supported_events", None)
+subscriptions = [
+    row for row in manifest.get("event_subscriptions") or [] if row.get("event_type") not in events
+]
+manifest["event_subscriptions"] = subscriptions + [
+    {"event_type": event, "severity": "any", "conditions": {}} for event in events
+]
 manifest["artifact_policies"] = artifacts
 dump(manifest_path, manifest)
 print(

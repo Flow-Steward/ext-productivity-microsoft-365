@@ -34,12 +34,18 @@ def _load(path: str) -> dict:
         ("artifact_policies", "contracts/artifact_policies.yaml", "artifact_policies"),
         ("external_effects", "extension.yaml", "external_effects"),
         ("workflow_triggers", "extension.yaml", "workflow_triggers"),
-        ("supported_events", "extension.yaml", "supported_events"),
         ("artifact_policies", "extension.yaml", "artifact_policies"),
     ],
 )
 def test_merged_file_matches_parts(part: str, path: str, key: str) -> None:
     assert _load(path)[key] == _parts(part), "run python .github/scripts/merge_contracts.py ."
+
+
+def test_emitted_events_are_event_subscriptions_not_a_manifest_field() -> None:
+    manifest = _load("extension.yaml")
+    assert "supported_events" not in manifest, "manifest v2 has no supported_events field"
+    subscribed = {row["event_type"] for row in manifest["event_subscriptions"]}
+    assert set(_parts("supported_events")) <= subscribed
 
 
 def test_actions_are_the_parts_plus_identity() -> None:

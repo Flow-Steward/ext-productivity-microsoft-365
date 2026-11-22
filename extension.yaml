@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.microsoft-365
 kind: notification_provider
-version: 0.2.3
+version: 0.2.4
 display_name: Microsoft 365
 description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams
   for project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in
@@ -52,6 +52,9 @@ event_subscriptions:
 - event_type: notification.delivery.failed
   severity: any
   conditions: {}
+- event_type: microsoft365.mail.message.received
+  severity: any
+  conditions: {}
 required_scopes:
 - notify:dispatch
 - extension:invoke
@@ -69,8 +72,6 @@ egress:
   - outlook.office365.com
   - '*.environment.api.powerplatform.com'
   - '*.logic.azure.com'
-supported_events:
-- microsoft365.mail.message.received
 workflow_triggers:
 - trigger_type_id: message_received
   provider_key: flowsteward.microsoft-365
