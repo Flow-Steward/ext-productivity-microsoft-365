@@ -16,8 +16,8 @@ jobs:
   extension:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Test dependencies
@@ -36,7 +36,7 @@ jobs:
         run: python .github/scripts/package_extension.py
       - name: The catalog would accept it
         run: python .github/scripts/catalog_check.py dist/*.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/*.zip
