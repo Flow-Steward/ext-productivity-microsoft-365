@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.microsoft-365
 kind: notification_provider
-version: 0.2.0
+version: 0.2.1
 display_name: Microsoft 365
 description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams
   for project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in

@@ -6,8 +6,9 @@ connection_types:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, offline_access, User.Read, Mail.ReadWrite, Mail.Send, Mail.ReadWrite.Shared, Mail.Send.Shared]
-        optional: []
+        required: [openid, profile, email, User.Read, Mail.ReadWrite, Mail.Send, Mail.ReadWrite.Shared, Mail.Send.Shared]
+        # Microsoft returns a refresh token but never lists offline_access as granted.
+        optional: [offline_access]
     config_schema:
       type: object
       additionalProperties: false
@@ -64,8 +65,9 @@ connection_types:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, offline_access, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
-        optional: []
+        required: [openid, profile, email, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
+        # Microsoft returns a refresh token but never lists offline_access as granted.
+        optional: [offline_access]
     config_schema:
       type: object
       additionalProperties: false
@@ -102,8 +104,9 @@ connection_types:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, offline_access, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
-        optional: []
+        required: [openid, profile, email, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
+        # Microsoft returns a refresh token but never lists offline_access as granted.
+        optional: [offline_access]
     config_schema: {type: object, additionalProperties: false, properties: {}}
     secret_schema:
       type: object
@@ -117,8 +120,9 @@ connection_types:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, offline_access, User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared]
-        optional: []
+        required: [openid, profile, email, User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared]
+        # Microsoft returns a refresh token but never lists offline_access as granted.
+        optional: [offline_access]
     config_schema:
       type: object
       additionalProperties: false
@@ -155,8 +159,9 @@ connection_types:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, offline_access, User.Read, User.ReadBasic.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send, ChannelMessage.Read.All, Chat.ReadWrite, ChatMessage.Send]
-        optional: []
+        required: [openid, profile, email, User.Read, User.ReadBasic.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send, ChannelMessage.Read.All, Chat.ReadWrite, ChatMessage.Send]
+        # Microsoft returns a refresh token but never lists offline_access as granted.
+        optional: [offline_access]
     config_schema: {type: object, additionalProperties: false, properties: {}}
     secret_schema:
       type: object

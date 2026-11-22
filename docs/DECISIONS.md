@@ -112,6 +112,12 @@ deviation and live-verify lists are in `docs/v0.2-calendar-notes.md` and
 8. **Delivery without Core's `idempotency_key`** fails with `idempotency_key_missing`
    before any write.
 9. **`calendar_ops/`** is the package name; `calendar` would shadow the standard library.
+10. **`offline_access` is an optional scope (0.2.1).** Found on the first live sign-in:
+    Microsoft issues the refresh token but does not list `offline_access` in the token
+    response's `scope`, and Core refuses a grant that lacks a required scope.
+11. **Core compile is the real install check.** The catalog check does not run it; the
+    install on a Core stand found invalid OAuth help codes, HTML help anchors and
+    schema keywords Core does not execute (fixed in a32622c).
 
 ### To verify on the live tenant (D7)
 
