@@ -1,0 +1,17 @@
+component_id: teams_webhook_connections
+type: connection_form
+title: Teams channels through a Workflows webhook
+description: For notifications only. A Teams Workflows flow posts Flow Steward's cards into one channel; no person signs in and Microsoft Graph is not used.
+data:
+  connection_kind: extension
+  connection_type: m365_teams_webhook
+  config_fields: [channel_label]
+  secret_fields: [webhook_url]
+  required_secret_fields: [webhook_url]
+  tags: [microsoft, teams, notifications]
+defaults:
+  display_name: Teams channel
+fields:
+  - {path: display_name, label: Display name, widget: text}
+  - {path: channel_label, label: Channel name, widget: text, help: "Shown in notification routes, for example Operations / Alerts. The flow behind the URL decides the real channel."}
+  - {path: webhook_url, label: Webhook URL, widget: secret, required: true, help: "The HTTP URL of the flow's trigger. It works like a password: stored encrypted and never shown again."}

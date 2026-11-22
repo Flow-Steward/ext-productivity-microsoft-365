@@ -25,7 +25,9 @@ connection_types:
         mail_trigger_folder: {type: string, default: inbox, maxLength: 512}
         last_inbound_sync_at: {type: string}
         mail_sync: {type: object}
-    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, poll_mailbox]
+    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, poll_mailbox, deliver_notification]
+    # Task C1: deliveries through this type address people by email.
+    notification: {target_kind: recipient, ledger_channel: email}
   - connection_type_id: m365_mail_app
     display_name: Outlook mailbox (organisation app)
     description: The organisation's Entra app reads and sends for one mailbox, without a signed-in user.
@@ -52,7 +54,9 @@ connection_types:
         mail_trigger_folder: {type: string, default: inbox, maxLength: 512}
         last_inbound_sync_at: {type: string}
         mail_sync: {type: object}
-    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, check_mail_access, poll_mailbox]
+    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, check_mail_access, poll_mailbox, deliver_notification]
+    # Task C1: deliveries through this type address people by email.
+    notification: {target_kind: recipient, ledger_channel: email}
   - connection_type_id: m365_files_user
     display_name: OneDrive / SharePoint (signed-in user)
     description: A user signs in with Microsoft. Their OneDrive or a SharePoint library they can access.
@@ -106,3 +110,74 @@ connection_types:
       additionalProperties: false
       properties: {access_token: {type: string}}
     capabilities: [find_workbooks, list_workbook_objects, read_range, write_range, append_table_rows]
+  - connection_type_id: m365_calendar_user
+    display_name: Outlook calendar (signed-in user)
+    description: A user signs in with Microsoft. Their own calendar, or the calendar of a shared mailbox they can access.
+    auth:
+      type: oauth2
+      provider_id: m365_oauth
+      scopes:
+        required: [openid, profile, email, offline_access, User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared]
+        optional: []
+    config_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        mailbox: {type: string, maxLength: 320, description: Optional shared mailbox whose calendar the signed-in user can access.}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [test_calendar_connection, list_calendars, list_events, get_event, create_event, update_event, cancel_event, respond_to_event, find_free_time]
+  - connection_type_id: m365_calendar_app
+    display_name: Outlook calendar (organisation app)
+    description: The organisation's Entra app manages the calendar of one mailbox, without a signed-in user. Access is granted through Exchange RBAC only.
+    config_schema:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, client_id, mailbox]
+      properties:
+        tenant_id: {type: string, maxLength: 256}
+        client_id: {type: string, maxLength: 64}
+        mailbox: {type: string, maxLength: 320}
+        client_secret_expires_on: {type: string, maxLength: 32}
+        control_mailbox: {type: string, maxLength: 320}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      required: [client_secret]
+      properties: {client_secret: {type: string}}
+    capabilities: [test_calendar_connection, list_calendars, list_events, get_event, create_event, update_event, cancel_event, respond_to_event, find_free_time, check_calendar_access]
+  - connection_type_id: m365_teams_user
+    display_name: Microsoft Teams (signed-in service user)
+    description: A service user signs in once; workflows then post to channels and chats and read messages in the background.
+    auth:
+      type: oauth2
+      provider_id: m365_oauth
+      scopes:
+        required: [openid, profile, email, offline_access, User.Read, User.ReadBasic.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send, ChannelMessage.Read.All, Chat.ReadWrite, ChatMessage.Send]
+        optional: []
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [test_teams_connection, list_teams, list_channels, list_chats, list_messages, post_channel_message, reply_to_message, post_chat_message, deliver_notification]
+    # Task C1: routes pick a channel or chat (`team_id/channel_id` or a chat id).
+    notification: {target_kind: channel, ledger_channel: chat, channel_source: route}
+  - connection_type_id: m365_teams_webhook
+    display_name: Teams channel (Workflows webhook)
+    description: A Teams Workflows flow ("When a Teams webhook request is received") posts Flow Steward notifications to its channel. Notifications only; no Graph, no user.
+    config_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        channel_label: {type: string, maxLength: 256, description: Display only. The flow behind the URL decides the channel.}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      required: [webhook_url]
+      properties: {webhook_url: {type: string, maxLength: 4096}}
+    capabilities: [deliver_notification]
+    # Task C1: the flow behind the URL fixes the channel; routes carry no `channel`.
+    notification: {target_kind: channel, ledger_channel: chat, channel_source: connection}

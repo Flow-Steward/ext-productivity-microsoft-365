@@ -9,7 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = ROOT / "contracts" / "parts"
-SERVICES = ["mail", "mail_sync", "files", "excel"]
+SERVICES = ["mail", "mail_sync", "files", "excel", "calendar", "teams", "notify"]
 
 
 def _parts(name: str) -> list:

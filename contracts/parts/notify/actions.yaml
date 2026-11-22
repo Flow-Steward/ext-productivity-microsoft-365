@@ -1,0 +1,26 @@
+- action_id: deliver_notification
+  title: Deliver Notification
+  description: Send a project notification through an Outlook mailbox or a Microsoft Teams channel.
+  required_scopes:
+  - notify:dispatch
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  parameters:
+  - {name: event, type: object, required: true}
+  - {name: route, type: object, required: true}
+  result_fields:
+  - delivered
+  - provider_message_id
+  error_codes:
+  - recipient_required
+  - channel_required
+  - notification_connection_incompatible
+  - idempotency_key_missing
+  - webhook_rejected
+  - message_too_large
+  - authorization_required
+  - mailbox_access_denied
+  - rate_limited
+  - timeout_unknown

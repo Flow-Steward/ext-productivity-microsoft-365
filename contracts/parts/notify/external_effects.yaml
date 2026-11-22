@@ -1,0 +1,16 @@
+# One deliver_notification effect (Core's contract). Its channel and target kind are the
+# defaults; each connection type's `notification` block (C1) overrides them.
+- operation_id: deliver_notification
+  effect_kind: message_delivery
+  channel: email
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields: [to, cc, bcc]
+    target_kind: recipient
+    target_label: recipient
+  rate_limit:
+    window_seconds: 60
+    account_max: 60
+    project_max: 30
+    connection_max: 15

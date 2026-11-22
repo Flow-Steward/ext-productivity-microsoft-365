@@ -1,0 +1,75 @@
+# Fragment for contracts/step_ui_manifest.yaml (merged by the lead). Task D2 (v0.2).
+# No resource_picker (DEV_NOTES): calendar_id is typed or mapped; the calendars_user /
+# calendars_app queries and List Outlook calendars list the ids.
+- {operation_id: test_calendar_connection, title: Test Outlook calendar connection, fields: []}
+- {operation_id: list_calendars, title: List Outlook calendars, fields: []}
+- operation_id: list_events
+  title: List Outlook events
+  fields:
+    - &calendar_id_field {name: calendar_id, widget_type: text, label: Calendar ID, help_text: A calendar_id from List Outlook calendars. Empty for the default calendar.}
+    - {name: start, widget_type: datetime, label: From (required), required: true, help_text: ISO 8601 date-time with an offset, or a local time together with Time zone.}
+    - {name: end, widget_type: datetime, label: To (required), required: true, help_text: At most 31 days after From.}
+    - &time_zone_field {name: time_zone, widget_type: text, label: Time zone, help_text: 'IANA (Europe/Berlin) or Windows (W. Europe Standard Time) name. Needed when a date-time has no offset.'}
+    - {name: limit, widget_type: number, label: Limit, help_text: 1 to 100. Default 50.}
+    - {name: cursor, widget_type: text, label: Cursor, help_text: Map only a next_cursor returned by this operation with the same calendar and window.}
+- operation_id: get_event
+  title: Get Outlook event
+  fields:
+    - &event_id_field {name: event_id, widget_type: text, label: Event ID (required), required: true, help_text: Map the event_id of List Outlook events or Create Outlook event.}
+    - {name: include_body, widget_type: boolean, label: Include text body}
+- operation_id: create_event
+  title: Create Outlook event
+  fields:
+    - *calendar_id_field
+    - {name: subject, widget_type: text, label: Subject (required), required: true}
+    - &start_field {name: start, widget_type: datetime, label: Start (required), required: true, help_text: ISO 8601 date-time with an offset, or a local time together with Time zone. A start_utc from Find free time works as is.}
+    - &end_field {name: end, widget_type: datetime, label: End (required), required: true}
+    - {name: time_zone, widget_type: text, label: Time zone, help_text: 'IANA (Europe/Berlin) or Windows (W. Europe Standard Time) name. The event is shown in this zone; default UTC.'}
+    - &attendees_field {name: attendees, widget_type: json, label: Required attendees, help_text: 'A list of addresses, or {"address": ..., "name": ...} objects. Outlook sends them the invitation.'}
+    - &optional_attendees_field {name: optional_attendees, widget_type: json, label: Optional attendees}
+    - &location_field {name: location, widget_type: text, label: Location}
+    - &body_text_field {name: body_text, widget_type: text, label: Text body}
+    - &body_html_field {name: body_html, widget_type: text, label: HTML body}
+    - &reminder_minutes_field {name: reminder_minutes, widget_type: number, label: Reminder (minutes before), help_text: Empty for the calendar's default.}
+    - &reminder_enabled_field {name: reminder_enabled, widget_type: boolean, label: Reminder on}
+    - {name: online_meeting, widget_type: boolean, label: Teams meeting, help_text: Adds a Teams link. Fails with online_meeting_unsupported if the calendar does not allow Teams meetings.}
+- operation_id: update_event
+  title: Update Outlook event
+  fields:
+    - *event_id_field
+    - {name: subject, widget_type: text, label: Subject}
+    - {name: start, widget_type: datetime, label: Start, help_text: Set Start and End together.}
+    - {name: end, widget_type: datetime, label: End}
+    - *time_zone_field
+    - {name: attendees, widget_type: json, label: Required attendees, help_text: Replaces the attendee list together with Optional attendees. Outlook decides by itself whether attendees get an update; there is no notify option.}
+    - *optional_attendees_field
+    - *location_field
+    - *body_text_field
+    - *body_html_field
+    - *reminder_minutes_field
+    - *reminder_enabled_field
+- operation_id: cancel_event
+  title: Cancel Outlook event
+  fields:
+    - {name: event_id, widget_type: text, label: Event ID (required), required: true, help_text: Organizer only. Outlook notifies the attendees. An invitee should use Respond to Outlook event with decline.}
+    - &comment_field {name: comment, widget_type: text, label: Comment}
+- operation_id: respond_to_event
+  title: Respond to Outlook event
+  fields:
+    - *event_id_field
+    - {name: response, widget_type: select, label: Response (required), required: true, options: [{label: Accept, value: accept}, {label: Tentative, value: tentativelyAccept}, {label: Decline, value: decline}]}
+    - {name: send_response, widget_type: boolean, label: Send the response to the organizer, help_text: Default on.}
+    - *comment_field
+- operation_id: find_free_time
+  title: Find free time
+  fields:
+    - {name: addresses, widget_type: json, label: People (required), required: true, help_text: 'Up to 20 addresses. Include the organizer. If any address cannot be resolved, no common slot is returned.'}
+    - {name: start, widget_type: datetime, label: Search from (required), required: true}
+    - {name: end, widget_type: datetime, label: Search until (required), required: true, help_text: Shorter than 62 days after Search from.}
+    - {name: time_zone, widget_type: text, label: Time zone, help_text: 'Working hours and local slot times use this zone (IANA or Windows name). Default UTC.'}
+    - {name: duration_minutes, widget_type: number, label: Duration (minutes), help_text: A multiple of 5. Default 30.}
+    - {name: working_hours_start, widget_type: text, label: Working hours from, help_text: 'HH:MM on a quarter hour. Default 09:00.'}
+    - {name: working_hours_end, widget_type: text, label: Working hours until, help_text: 'HH:MM on a quarter hour. Default 17:00.'}
+    - {name: slot_interval_minutes, widget_type: number, label: Slot interval (minutes), help_text: A multiple of 15. Default 30.}
+    - {name: include_weekends, widget_type: boolean, label: Include weekends}
+    - {name: max_slots, widget_type: number, label: Maximum slots, help_text: 1 to 100. Default 20.}

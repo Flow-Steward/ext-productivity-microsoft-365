@@ -3,11 +3,11 @@ lifecycle:
   data_schema_version: 1
   data_migrations: []
 extension_id: flowsteward.microsoft-365
-kind: tool_provider
-version: 0.1.0
+kind: notification_provider
+version: 0.2.0
 display_name: Microsoft 365
-description: Outlook mail, OneDrive / SharePoint files and Excel workbooks for project workflows through
-  Microsoft Graph, with signed-in user and organisation-app connections.
+description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams for
+  project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in Teams.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-productivity-microsoft-365/issues
@@ -20,15 +20,39 @@ listing:
   - onedrive
   - sharepoint
   - excel
+  - calendar
+  - teams
   - email
+  - notifications
   - files
   - spreadsheets
-  summary: Connect Outlook mailboxes, SharePoint libraries and Excel workbooks; start workflows on new
-    email.
+  summary: Outlook mail and calendar, SharePoint files, Excel and Teams in workflows; notifications by email
+    or in Teams.
 features:
-- tool
+- notify
 - action
+- tool
+event_subscriptions:
+- event_type: job.failed
+  severity: any
+  conditions: {}
+- event_type: job.completed
+  severity: any
+  conditions: {}
+- event_type: job.awaiting_approval
+  severity: any
+  conditions: {}
+- event_type: approval.requested
+  severity: any
+  conditions: {}
+- event_type: approval.resolved
+  severity: any
+  conditions: {}
+- event_type: notification.delivery.failed
+  severity: any
+  conditions: {}
 required_scopes:
+- notify:dispatch
 - extension:invoke
 - artifact:read
 - artifact:write
@@ -42,6 +66,8 @@ egress:
   - '*.sharepoint.com'
   - outlook.office.com
   - outlook.office365.com
+  - '*.environment.api.powerplatform.com'
+  - '*.logic.azure.com'
 supported_events:
 - microsoft365.mail.message.received
 workflow_triggers:
@@ -154,6 +180,82 @@ external_effects:
   channel: microsoft_excel
   idempotency: required
   test_mode_behavior: suppress
+- operation_id: create_event
+  effect_kind: calendar_event_create
+  channel: microsoft_outlook_calendar
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - attendees
+    - optional_attendees
+    target_kind: recipient
+    target_label: attendee
+- operation_id: update_event
+  effect_kind: calendar_event_update
+  channel: microsoft_outlook_calendar
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: cancel_event
+  effect_kind: calendar_event_cancel
+  channel: microsoft_outlook_calendar
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: respond_to_event
+  effect_kind: calendar_event_response
+  channel: microsoft_outlook_calendar
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: post_channel_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - team_id
+    - channel_id
+    target_kind: channel
+    target_label: channel
+- operation_id: reply_to_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - team_id
+    - channel_id
+    target_kind: channel
+    target_label: channel
+- operation_id: post_chat_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - chat_id
+    - user
+    target_kind: recipient
+    target_label: chat
+- operation_id: deliver_notification
+  effect_kind: message_delivery
+  channel: email
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - to
+    - cc
+    - bcc
+    target_kind: recipient
+    target_label: recipient
+  rate_limit:
+    window_seconds: 60
+    account_max: 60
+    project_max: 30
+    connection_max: 15
 runtime_grants:
   resources:
     project_connection:
@@ -229,6 +331,24 @@ runtime:
             type: email
             max_length: 320
       - intent_id: excel_connect
+        static_parameters:
+          prompt: select_account
+        user_inputs:
+        - input_id: email_hint
+          parameter: login_hint
+          validation:
+            type: email
+            max_length: 320
+      - intent_id: calendar_connect
+        static_parameters:
+          prompt: select_account
+        user_inputs:
+        - input_id: email_hint
+          parameter: login_hint
+          validation:
+            type: email
+            max_length: 320
+      - intent_id: teams_connect
         static_parameters:
           prompt: select_account
         user_inputs:

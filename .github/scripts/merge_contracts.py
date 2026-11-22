@@ -11,7 +11,7 @@ import yaml
 
 root = Path(sys.argv[1])
 parts = root / "contracts" / "parts"
-SERVICES = ["mail", "mail_sync", "files", "excel"]
+SERVICES = ["mail", "mail_sync", "files", "excel", "calendar", "teams", "notify"]
 
 
 def load(name):

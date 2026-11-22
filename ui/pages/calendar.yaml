@@ -1,0 +1,24 @@
+page_id: calendar
+title: Outlook calendar
+description: Connect Outlook calendars for this project, by a signed-in user or through the organisation app.
+components:
+  - component_id: calendar_user_connections
+    type: connection_form
+    title: Calendars of signed-in users
+    description: A user signs in with Microsoft. Leave Mailbox empty for their own calendar, or enter a shared mailbox whose calendar they can open.
+    data:
+      oauth_provider_id: m365_oauth
+      connection_type: m365_calendar_user
+      oauth_intent: calendar_connect
+      test_action: test_calendar_connection
+  - ref: ../components/calendar_app_connection_form.yaml
+  - component_id: calendar_notes
+    type: markdown
+    title: How calendar steps behave
+    body: |
+      - **Create meeting** never creates a second event: a repeated step finds its earlier event by a hidden key. If Microsoft's answer is lost and the event cannot be found, the step fails with `timeout_unknown` and is not repeated automatically.
+      - **Teams link.** *Online meeting* works only on calendars that allow Teams meetings; otherwise the step fails with `online_meeting_unsupported` before anything is created.
+      - **Updates and invitations.** Outlook decides by itself whether attendees get an update. Flow Steward has no "notify attendees" switch.
+      - **Cancel** works for the organizer and notifies attendees. An attendee declines with *Respond to event* instead.
+      - **Find free time** returns common slots only when everyone's availability is known. If an address is unknown or has no free/busy, the result says `complete: false`, lists it under `unresolved_addresses`, and gives **no** common slots, so a workflow never books someone whose availability is unknown.
+      - **Check calendar access** (organisation app) reads a *control mailbox* that the app must not reach. It only reads.

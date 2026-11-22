@@ -1,0 +1,13 @@
+# Core's notification-provider delivery contract (task D1/D4). Not a workflow step.
+- operation_id: deliver_notification
+  display_name: Deliver Notification
+  description: Internal notification-provider delivery through Outlook mail or Microsoft Teams.
+  operation_kind: action
+  category: notification
+  workflow_visible: false
+  inputs:
+  - {name: event, value_type: object, required: true}
+  - {name: route, value_type: object, required: true}
+  outputs:
+  - {name: delivered, value_type: boolean}
+  - {name: provider_message_id, value_type: text}

@@ -433,3 +433,332 @@ forms:
     help_text: Off by default. When off
     text starting with = + - @ is stored as text: null
     not run as a formula.: null
+- operation_id: test_calendar_connection
+  title: Test Outlook calendar connection
+  fields: []
+- operation_id: list_calendars
+  title: List Outlook calendars
+  fields: []
+- operation_id: list_events
+  title: List Outlook events
+  fields:
+  - &id014
+    name: calendar_id
+    widget_type: text
+    label: Calendar ID
+    help_text: A calendar_id from List Outlook calendars. Empty for the default calendar.
+  - name: start
+    widget_type: datetime
+    label: From (required)
+    required: true
+    help_text: ISO 8601 date-time with an offset
+    or a local time together with Time zone.: null
+  - name: end
+    widget_type: datetime
+    label: To (required)
+    required: true
+    help_text: At most 31 days after From.
+  - &id016
+    name: time_zone
+    widget_type: text
+    label: Time zone
+    help_text: IANA (Europe/Berlin) or Windows (W. Europe Standard Time) name. Needed when a date-time
+      has no offset.
+  - name: limit
+    widget_type: number
+    label: Limit
+    help_text: 1 to 100. Default 50.
+  - name: cursor
+    widget_type: text
+    label: Cursor
+    help_text: Map only a next_cursor returned by this operation with the same calendar and window.
+- operation_id: get_event
+  title: Get Outlook event
+  fields:
+  - &id015
+    name: event_id
+    widget_type: text
+    label: Event ID (required)
+    required: true
+    help_text: Map the event_id of List Outlook events or Create Outlook event.
+  - name: include_body
+    widget_type: boolean
+    label: Include text body
+- operation_id: create_event
+  title: Create Outlook event
+  fields:
+  - *id014
+  - name: subject
+    widget_type: text
+    label: Subject (required)
+    required: true
+  - name: start
+    widget_type: datetime
+    label: Start (required)
+    required: true
+    help_text: ISO 8601 date-time with an offset
+    or a local time together with Time zone. A start_utc from Find free time works as is.: null
+  - name: end
+    widget_type: datetime
+    label: End (required)
+    required: true
+  - name: time_zone
+    widget_type: text
+    label: Time zone
+    help_text: IANA (Europe/Berlin) or Windows (W. Europe Standard Time) name. The event is shown in this
+      zone; default UTC.
+  - name: attendees
+    widget_type: json
+    label: Required attendees
+    help_text: 'A list of addresses, or {"address": ..., "name": ...} objects. Outlook sends them the
+      invitation.'
+  - &id017
+    name: optional_attendees
+    widget_type: json
+    label: Optional attendees
+  - &id018
+    name: location
+    widget_type: text
+    label: Location
+  - &id019
+    name: body_text
+    widget_type: text
+    label: Text body
+  - &id020
+    name: body_html
+    widget_type: text
+    label: HTML body
+  - &id021
+    name: reminder_minutes
+    widget_type: number
+    label: Reminder (minutes before)
+    help_text: Empty for the calendar's default.
+  - &id022
+    name: reminder_enabled
+    widget_type: boolean
+    label: Reminder on
+  - name: online_meeting
+    widget_type: boolean
+    label: Teams meeting
+    help_text: Adds a Teams link. Fails with online_meeting_unsupported if the calendar does not allow
+      Teams meetings.
+- operation_id: update_event
+  title: Update Outlook event
+  fields:
+  - *id015
+  - name: subject
+    widget_type: text
+    label: Subject
+  - name: start
+    widget_type: datetime
+    label: Start
+    help_text: Set Start and End together.
+  - name: end
+    widget_type: datetime
+    label: End
+  - *id016
+  - name: attendees
+    widget_type: json
+    label: Required attendees
+    help_text: Replaces the attendee list together with Optional attendees. Outlook decides by itself
+      whether attendees get an update; there is no notify option.
+  - *id017
+  - *id018
+  - *id019
+  - *id020
+  - *id021
+  - *id022
+- operation_id: cancel_event
+  title: Cancel Outlook event
+  fields:
+  - name: event_id
+    widget_type: text
+    label: Event ID (required)
+    required: true
+    help_text: Organizer only. Outlook notifies the attendees. An invitee should use Respond to Outlook
+      event with decline.
+  - &id023
+    name: comment
+    widget_type: text
+    label: Comment
+- operation_id: respond_to_event
+  title: Respond to Outlook event
+  fields:
+  - *id015
+  - name: response
+    widget_type: select
+    label: Response (required)
+    required: true
+    options:
+    - label: Accept
+      value: accept
+    - label: Tentative
+      value: tentativelyAccept
+    - label: Decline
+      value: decline
+  - name: send_response
+    widget_type: boolean
+    label: Send the response to the organizer
+    help_text: Default on.
+  - *id023
+- operation_id: find_free_time
+  title: Find free time
+  fields:
+  - name: addresses
+    widget_type: json
+    label: People (required)
+    required: true
+    help_text: Up to 20 addresses. Include the organizer. If any address cannot be resolved, no common
+      slot is returned.
+  - name: start
+    widget_type: datetime
+    label: Search from (required)
+    required: true
+  - name: end
+    widget_type: datetime
+    label: Search until (required)
+    required: true
+    help_text: Shorter than 62 days after Search from.
+  - name: time_zone
+    widget_type: text
+    label: Time zone
+    help_text: Working hours and local slot times use this zone (IANA or Windows name). Default UTC.
+  - name: duration_minutes
+    widget_type: number
+    label: Duration (minutes)
+    help_text: A multiple of 5. Default 30.
+  - name: working_hours_start
+    widget_type: text
+    label: Working hours from
+    help_text: HH:MM on a quarter hour. Default 09:00.
+  - name: working_hours_end
+    widget_type: text
+    label: Working hours until
+    help_text: HH:MM on a quarter hour. Default 17:00.
+  - name: slot_interval_minutes
+    widget_type: number
+    label: Slot interval (minutes)
+    help_text: A multiple of 15. Default 30.
+  - name: include_weekends
+    widget_type: boolean
+    label: Include weekends
+  - name: max_slots
+    widget_type: number
+    label: Maximum slots
+    help_text: 1 to 100. Default 20.
+- operation_id: test_teams_connection
+  title: Test Teams connection
+  fields: []
+- operation_id: list_teams
+  title: List Teams teams
+  fields: []
+- operation_id: list_channels
+  title: List Teams channels
+  fields:
+  - &id026
+    name: team_id
+    widget_type: text
+    label: Team ID (required)
+    required: true
+    help_text: Map a team_id from List Teams teams.
+- operation_id: list_chats
+  title: List Teams chats
+  fields:
+  - name: topic_contains
+    widget_type: text
+    label: Topic contains
+  - name: member
+    widget_type: text
+    label: Member address
+    help_text: Only chats that include this person.
+  - &id024
+    name: limit
+    widget_type: number
+    label: Limit
+    help_text: 1 to 50. Default 25.
+  - &id025
+    name: cursor
+    widget_type: text
+    label: Cursor
+    help_text: Map only a next_cursor returned by this operation with the same filters.
+- operation_id: list_messages
+  title: List Teams messages
+  fields:
+  - name: team_id
+    widget_type: text
+    label: Team ID
+    help_text: For a channel. Map a team_id from List Teams teams.
+  - name: channel_id
+    widget_type: text
+    label: Channel ID
+    help_text: For a channel. Map a channel_id from List Teams channels.
+  - name: chat_id
+    widget_type: text
+    label: Chat ID
+    help_text: For a chat
+    instead of a team and channel.: null
+  - *id024
+  - *id025
+- operation_id: post_channel_message
+  title: Post to a Teams channel
+  fields:
+  - *id026
+  - &id027
+    name: channel_id
+    widget_type: text
+    label: Channel ID (required)
+    required: true
+    help_text: Map a channel_id from List Teams channels.
+  - name: subject
+    widget_type: text
+    label: Subject
+  - &id028
+    name: body_text
+    widget_type: text
+    label: Text body
+    help_text: Use a text body or an HTML body. About 28 KB at most.
+  - &id029
+    name: body_html
+    widget_type: text
+    label: HTML body
+  - &id030
+    name: mentions
+    widget_type: json
+    label: Mentions
+    help_text: A list of user addresses to @mention at the start of the message.
+  - &id031
+    name: file_links
+    widget_type: json
+    label: File links
+    help_text: 'https links, or {"url": ..., "name": ...} objects, for example a link from Create share
+      link. Files are not uploaded.'
+- operation_id: reply_to_message
+  title: Reply in a Teams channel thread
+  fields:
+  - *id026
+  - *id027
+  - name: message_id
+    widget_type: text
+    label: Message ID (required)
+    required: true
+    help_text: The thread's root message
+    for example a message_id from List Teams messages.: null
+  - *id028
+  - *id029
+  - *id030
+  - *id031
+- operation_id: post_chat_message
+  title: Post to a Teams chat
+  fields:
+  - name: chat_id
+    widget_type: text
+    label: Chat ID
+    help_text: An existing chat. Leave empty to write to a user 1:1.
+  - name: user
+    widget_type: text
+    label: User address
+    help_text: Writes in the 1:1 chat with this person (created if needed). Use instead of a chat ID.
+  - *id028
+  - *id029
+  - *id030
+  - *id031

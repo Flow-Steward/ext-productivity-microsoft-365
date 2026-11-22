@@ -1,4 +1,4 @@
-# Decisions and open verifications (v0.1.0)
+# Decisions and open verifications
 
 The task is `bmad-project/docs/plans/2026-11-22-microsoft-365-extension-task.md`.
 This file records where the implementation differs from it, and which Graph or Core
@@ -84,3 +84,56 @@ behaviour has not yet been checked against a live tenant.
 
 **Trigger** (needs Core Part A): the contract is in `docs/TRIGGER_CONTRACT.md` §6
 and in the task's A1–A7.
+
+## v0.2.0
+
+The task is `bmad-project/docs/plans/2026-11-22-microsoft-365-extension-v0.2-task.md`
+(Part D; Core Part C is built separately on the Core release branch). The full
+deviation and live-verify lists are in `docs/v0.2-calendar-notes.md` and
+`docs/v0.2-teams-notes.md`.
+
+### Decisions taken during the build
+
+1. **`User.ReadBasic.All`** is added to the Teams scopes. @mentions resolve addresses
+   with `GET /users/{address}`; it needs no admin consent. The task was amended.
+2. **`event.run_url`** (task C3.4) was added to Core Part C during the build: channel
+   providers had no way to link to the run. Without it, Teams messages and cards have
+   no link.
+3. **Every Teams post is HTML.** A text body is escaped, so the hidden marker and
+   mentions work for both kinds. File links are plain links, not Graph attachments.
+4. **The Teams channel picker** lists the channels of every joined team (first 50
+   teams), as `team_id/channel_id`: Core passes no dependent field to a resource query.
+5. **Calendar re-run guard.** `create_event` looks for its key before posting, so a
+   re-run returns `already_exists` instead of a second event (one extra GET per create).
+6. **An appointment without attendees is deleted** by `cancel_event`; `cancel` is a
+   meeting action.
+7. **After an ambiguous cancel**, an event that still reads as active is
+   `timeout_unknown`: Graph's event has no parent folder to detect Deleted Items.
+8. **Delivery without Core's `idempotency_key`** fails with `idempotency_key_missing`
+   before any write.
+9. **`calendar_ops/`** is the package name; `calendar` would shadow the standard library.
+
+### To verify on the live tenant (D7)
+
+**Calendar**
+- `GET /events/{id}` after the organizer cancels (404, or `isCancelled`).
+- A repeated POST with the same `transactionId`.
+- Whether the extended-property filter combines with a date filter.
+- IANA zone names in `dateTimeTimeZone.timeZone` on create and update.
+- Whether the RBAC scope limits whose schedules `getSchedule` can read app-only.
+- `allowedOnlineMeetingProviders` on calendars with and without Teams.
+
+**Teams**
+- Whether the HTML-comment marker survives in stored messages (else switch
+  `teams.markers.DEFAULT_MARKER` to the zero-width marker).
+- Channel message order in `list_messages`.
+- Creating a 1:1 chat with an alias or an unknown address.
+- Graph's answer to an oversized message.
+- The real Workflows webhook host and status codes; that the card appears.
+
+**Notifications and upgrade**
+- One event through a mail route and a Teams route of this provider; no duplicates on
+  re-delivery.
+- System email (reset, welcome, email change) from `noreply@`.
+- Upgrading an installed v0.1 (kind `tool_provider`) to v0.2: connections, OAuth
+  grants and the mail-trigger cursor survive.

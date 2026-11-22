@@ -1,10 +1,12 @@
 # Microsoft 365
 
-Microsoft 365 extension version 0.1.0 adds Outlook mail, OneDrive for Business /
-SharePoint Online files and Excel workbooks to project workflows through Microsoft
-Graph v1.0, plus a **New Outlook email** workflow trigger. Every connection is
-project-scoped, and every workflow step selects its connection explicitly. There is
-no default account.
+Microsoft 365 extension version 0.2.0 adds Outlook mail and calendar, OneDrive for
+Business / SharePoint Online files, Excel workbooks and Microsoft Teams to project
+workflows through Microsoft Graph v1.0, plus a **New Outlook email** workflow trigger.
+It is also a **notification provider**: Flow Steward notifications by Outlook email or
+in a Teams channel, and system email (password reset, welcome) from an Outlook mailbox.
+Every connection is project-scoped, and every workflow step selects its connection
+explicitly. There is no default account.
 
 Logo: `icon.png` (the neutral Flow Steward package mark).
 
@@ -15,6 +17,11 @@ Logo: `icon.png` (the neutral Flow Steward package mark).
   task (background polls that keep their connection, receive a token or secrets,
   and deliver each email exactly once). On an older Core every operation works, but
   do not switch the trigger on.
+- Notifications, system email and installing v0.2 at all need the Core changes
+  "Part C" of the v0.2 task: per-connection-type notification targets, the explicit
+  system email sender, OAuth tokens and the idempotency key on delivery, and
+  `event.run_url`. Core v0.9.23 does not know the `notification` block on connection
+  types.
 - `flowsteward-extension-sdk` 0.4.0 (provided by the host).
 
 ## Two ways to connect
@@ -25,10 +32,13 @@ Logo: `icon.png` (the neutral Flow Steward package mark).
 | Mail | own mailbox, or a shared mailbox the user can open (`mailbox`) | any mailbox the app is allowed, by address |
 | Files | own OneDrive, a SharePoint site or a drive ID | one SharePoint library per connection |
 | Excel | **yes** (only this way) | no: Microsoft does not allow app-only workbook editing |
+| Calendar | own calendar or a shared mailbox's | any mailbox the app is allowed (Exchange RBAC) |
+| Teams | **yes** for Graph (a service user) | no Graph posting; a Workflows webhook for notifications |
 | If the person leaves | the connection stops | nothing changes |
 
 Connection types: `m365_mail_user`, `m365_mail_app`, `m365_files_user`,
-`m365_files_app`, `m365_excel_user`. Add as many of each as you need, for example
+`m365_files_app`, `m365_excel_user`, `m365_calendar_user`, `m365_calendar_app`,
+`m365_teams_user`, `m365_teams_webhook`. Add as many of each as you need, for example
 `invoices@` and `cmr@` as two `m365_mail_app` connections.
 
 Work or school accounts only; personal Microsoft accounts are not supported.
@@ -76,6 +86,19 @@ support message.
 
 **Excel** (`m365_excel_user`): `find_workbooks`, `list_workbook_objects`,
 `read_range` (→ dataset), `write_range`, `append_table_rows`.
+
+**Calendar** (`m365_calendar_user`, `m365_calendar_app`):
+- reads: `test_calendar_connection`, `list_calendars`, `list_events` (at most 31 days),
+  `get_event`, `find_free_time` (`getSchedule`, up to 20 addresses, window under 62
+  days; unknown availability → `complete: false` and no common slots);
+- writes: `create_event` (optional Teams link; a repeat finds its earlier event by a
+  hidden key), `update_event`, `cancel_event` (organizer only), `respond_to_event`;
+- setup action: `check_calendar_access` (app-only).
+
+**Teams** (`m365_teams_user`): `test_teams_connection`, `list_teams`, `list_channels`,
+`list_chats`, `list_messages`, `post_channel_message`, `reply_to_message`,
+`post_chat_message`. A post whose answer is lost is `timeout_unknown` and never posted
+again automatically. Messages are limited to about 28 KB; files are shared as links.
 
 Every write is suppressed in Test Run.
 
@@ -144,6 +167,23 @@ be confirmed, it returns `timeout_unknown` and is never repeated automatically.
 - **`upload_file`** after an unclear result with `fail` or `replace`: confirmed by size
   and hash, otherwise `timeout_unknown`. With `rename` it is always `timeout_unknown`.
 
+## Notifications
+
+The extension is a notification provider with two kinds of connection types:
+
+| Type | Route addresses | Notes |
+|---|---|---|
+| `m365_mail_user`, `m365_mail_app` | people: `to`, `cc`, `bcc` | Core's standard subject and text; draft-then-send flow |
+| `m365_teams_user` | a channel `team_id/channel_id` or a chat id | an HTML message with title, severity, summary and run link |
+| `m365_teams_webhook` | its own channel, fixed by the flow | an Adaptive Card; a 2xx means the flow accepted it |
+
+- Every route names its connection. A webhook route never names a channel.
+- Core sends a stable key per delivery, so a repeated delivery does not send a second
+  email. A Teams post or webhook call whose answer is lost is `timeout_unknown` and is
+  not repeated.
+- An approval email links to the run page, where the approval is decided.
+- System email: a platform administrator picks one mail connection in Settings → Email.
+
 ## New Outlook email trigger
 
 - **Off** for every mailbox until switched on (Mail tab). Checks the chosen folder
@@ -178,6 +218,11 @@ Every error code is in `m365/errors.py::SAFE_ERROR_CODES`. The most common ones:
 | `tenant_not_multitenant` | Register the app as multi-tenant. |
 | `rate_limited`, `provider_unavailable`, `network_failure` | Retryable. |
 | `timeout_unknown` | A write could not be confirmed. Check before repeating it. |
+| `online_meeting_unsupported` | The calendar does not allow Teams meetings. |
+| `not_organizer` | Only the organizer can cancel; use *Respond to event*. |
+| `message_too_large` | A Teams message over about 28 KB. |
+| `webhook_rejected` | The Workflows webhook refused the card, or its URL is not allowed. |
+| `notification_connection_incompatible` | The route does not fit the connection type. |
 
 ## Development
 

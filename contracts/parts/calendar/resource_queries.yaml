@@ -1,0 +1,21 @@
+# Fragment for contracts/resource_queries.yaml (merged by the lead). Task D2.
+# One picker query per connection type: Core resolves a query with exactly one
+# connection_type_id. Both list the calendars through list_calendars.
+- query_id: calendars_user
+  operation_id: list_calendars
+  connection_type_id: m365_calendar_user
+  display_name: Outlook calendars
+  description: The default calendar first, then every other calendar of the signed-in user's (or shared) mailbox.
+  cursor_mode: none
+  value_field: calendar_id
+  label_field: label
+  resource_kind: calendar
+- query_id: calendars_app
+  operation_id: list_calendars
+  connection_type_id: m365_calendar_app
+  display_name: Outlook calendars
+  description: The default calendar first, then every other calendar of the app-only connection's mailbox.
+  cursor_mode: none
+  value_field: calendar_id
+  label_field: label
+  resource_kind: calendar

@@ -1,0 +1,53 @@
+# Fragment for contracts/step_ui_manifest.yaml (merged by the lead). Task v0.2 D3.
+# No resource_picker (as in v0.1, DEV_NOTES): IDs are typed or mapped. The Teams page
+# lists them through the teams_user / channels_user / chats_user queries.
+- {operation_id: test_teams_connection, title: Test Teams connection, fields: []}
+- {operation_id: list_teams, title: List Teams teams, fields: []}
+- operation_id: list_channels
+  title: List Teams channels
+  fields:
+    - &team_field {name: team_id, widget_type: text, label: Team ID (required), required: true, help_text: Map a team_id from List Teams teams.}
+- operation_id: list_chats
+  title: List Teams chats
+  fields:
+    - {name: topic_contains, widget_type: text, label: Topic contains}
+    - {name: member, widget_type: text, label: Member address, help_text: Only chats that include this person.}
+    - &limit_field {name: limit, widget_type: number, label: Limit, help_text: 1 to 50. Default 25.}
+    - &cursor_field {name: cursor, widget_type: text, label: Cursor, help_text: Map only a next_cursor returned by this operation with the same filters.}
+- operation_id: list_messages
+  title: List Teams messages
+  fields:
+    - {name: team_id, widget_type: text, label: Team ID, help_text: For a channel. Map a team_id from List Teams teams.}
+    - {name: channel_id, widget_type: text, label: Channel ID, help_text: For a channel. Map a channel_id from List Teams channels.}
+    - {name: chat_id, widget_type: text, label: Chat ID, help_text: For a chat, instead of a team and channel.}
+    - *limit_field
+    - *cursor_field
+- operation_id: post_channel_message
+  title: Post to a Teams channel
+  fields:
+    - *team_field
+    - &channel_field {name: channel_id, widget_type: text, label: Channel ID (required), required: true, help_text: Map a channel_id from List Teams channels.}
+    - {name: subject, widget_type: text, label: Subject}
+    - &body_text_field {name: body_text, widget_type: text, label: Text body, help_text: Use a text body or an HTML body. About 28 KB at most.}
+    - &body_html_field {name: body_html, widget_type: text, label: HTML body}
+    - &mentions_field {name: mentions, widget_type: json, label: Mentions, help_text: A list of user addresses to @mention at the start of the message.}
+    - &file_links_field {name: file_links, widget_type: json, label: File links, help_text: 'https links, or {"url": ..., "name": ...} objects, for example a link from Create share link. Files are not uploaded.'}
+- operation_id: reply_to_message
+  title: Reply in a Teams channel thread
+  fields:
+    - *team_field
+    - *channel_field
+    - {name: message_id, widget_type: text, label: Message ID (required), required: true, help_text: The thread's root message, for example a message_id from List Teams messages.}
+    - *body_text_field
+    - *body_html_field
+    - *mentions_field
+    - *file_links_field
+- operation_id: post_chat_message
+  title: Post to a Teams chat
+  fields:
+    - {name: chat_id, widget_type: text, label: Chat ID, help_text: An existing chat. Leave empty to write to a user 1:1.}
+    - {name: user, widget_type: text, label: User address, help_text: Writes in the 1:1 chat with this person (created if needed). Use instead of a chat ID.}
+    - *body_text_field
+    - *body_html_field
+    - *mentions_field
+    - *file_links_field

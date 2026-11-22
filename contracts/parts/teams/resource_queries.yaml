@@ -1,0 +1,31 @@
+# Fragment for contracts/resource_queries.yaml (merged by the lead). Task v0.2 D3.
+# Delegated only. Core passes no dependent field to a query, so the channel picker
+# lists the channels of every joined team (first 50 teams) as team_id/channel_id,
+# the format of a Teams notification route.
+- query_id: teams_user
+  operation_id: list_teams
+  connection_type_id: m365_teams_user
+  display_name: Teams teams
+  description: Teams the signed-in user has joined, filtered by name.
+  cursor_mode: none
+  value_field: id
+  label_field: label
+  resource_kind: team
+- query_id: channels_user
+  operation_id: list_channels
+  connection_type_id: m365_teams_user
+  display_name: Teams channels
+  description: Channels of the joined teams as "Team / Channel"; the value is team_id/channel_id.
+  cursor_mode: none
+  value_field: id
+  label_field: label
+  resource_kind: channel
+- query_id: chats_user
+  operation_id: list_chats
+  connection_type_id: m365_teams_user
+  display_name: Teams chats
+  description: The signed-in user's chats by topic or member names; the value is the chat ID.
+  cursor_mode: cursor
+  value_field: id
+  label_field: label
+  resource_kind: chat

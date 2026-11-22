@@ -23,3 +23,10 @@ components:
       - One workflow watches one mailbox. For `invoices@` and `cmr@`, create two workflows.
       - The trigger passes sender, subject, received time and the message ID. The workflow then reads the body and attachments with *Get message* and *Get attachment*.
       - To react only to some subjects, add a condition step in the workflow; the trigger itself filters only by exact sender.
+  - component_id: mail_notification_notes
+    type: markdown
+    title: Notifications and system email
+    body: |
+      - **Notifications.** A project notification route can send email through any mailbox on this page. Pick the mailbox in the route; Flow Steward's standard subject and text are used, and an approval email links to the run page, where the approval is decided.
+      - **System email** (password reset, welcome, email change confirmation) can be sent from one mailbox here, for example `noreply@company.com`, so no SMTP server is needed. A **platform administrator** chooses it in *Settings → Email*. After that the mailbox, its secret and its sign-in can only be changed by a platform administrator, and every change must be confirmed again in *Settings → Email*.
+      - Use a dedicated `noreply@` mailbox in the app's Exchange RBAC scope (Setup guide).

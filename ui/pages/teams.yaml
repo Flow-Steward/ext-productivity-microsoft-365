@@ -1,0 +1,33 @@
+page_id: teams
+title: Microsoft Teams
+description: Post to Teams channels and chats from workflows, and send Flow Steward notifications to a channel.
+components:
+  - component_id: teams_user_connections
+    type: connection_form
+    title: Teams service users
+    description: A service user signs in once. Workflows then post and read as that user; Flow Steward refreshes the access in the background. Microsoft does not let an app post to channels without a user through Graph.
+    data:
+      oauth_provider_id: m365_oauth
+      connection_type: m365_teams_user
+      oauth_intent: teams_connect
+      test_action: test_teams_connection
+  - ref: ../components/teams_webhook_connection_form.yaml
+  - component_id: teams_notes
+    type: markdown
+    title: How posting works
+    body: |
+      - **Admin consent.** `ChannelMessage.Read.All` (reading channel messages) needs an administrator's consent in Entra before the first sign-in.
+      - **Use a service account,** for example `flowsteward@company.com`, and add it to the teams and chats it posts to. Messages appear under its name.
+      - **No double posts.** Teams has no idempotency key. If Microsoft's answer to a post is lost, the step fails with `timeout_unknown` and is never posted again automatically. Check the channel before you repeat it.
+      - **Size.** A message is limited to about 28 KB; a larger one fails with `message_too_large` before anything is sent.
+      - **Files.** Share a file with *Create share link* and put the link in the message. Binary attachments are not supported.
+  - component_id: teams_webhook_guide
+    type: markdown
+    title: Create a Workflows webhook
+    body: |
+      1. In Teams, open the channel → **⋯** → **Workflows**, and choose the template *Post to a channel when a webhook request is received*.
+      2. In the flow's trigger set **Who can trigger the flow** to **Anyone**. Flow Steward sends no Microsoft token.
+      3. Save the flow and copy the HTTP URL of the trigger. Paste it above as the **Webhook URL**.
+      4. The flow has an **owner**. If the owner's account is disabled or leaves, the flow stops and cards no longer appear. Use a service account as owner.
+
+      A successful delivery means the flow **accepted** the card; the flow itself then posts it. If a card does not appear, check the flow's run history in Power Automate.

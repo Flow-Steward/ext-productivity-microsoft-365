@@ -1233,3 +1233,891 @@ actions:
   - response_too_large
   - timeout_unknown
   - internal_error
+- action_id: test_calendar_connection
+  title: Test Outlook calendar connection
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - mailbox_address
+  - display_name
+  - auth_mode
+  - calendar_id
+  - calendar_name
+  - can_edit
+  - allowed_online_meeting_providers
+  - teams_meetings_allowed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_calendars
+  title: List Outlook calendars
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - calendars
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_events
+  title: List Outlook events
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: calendar_id
+    type: string
+    required: false
+  - name: start
+    type: string
+    required: true
+  - name: end
+    type: string
+    required: true
+  - name: time_zone
+    type: string
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - events
+  - count
+  - next_cursor
+  - window_start_utc
+  - window_end_utc
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - calendar_not_found
+  - range_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: get_event
+  title: Get Outlook event
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: event_id
+    type: string
+    required: true
+  - name: include_body
+    type: boolean
+    required: false
+  result_fields:
+  - event
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: create_event
+  title: Create Outlook event
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: calendar_id
+    type: string
+    required: false
+  - name: subject
+    type: string
+    required: true
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: start
+    type: string
+    required: true
+  - name: end
+    type: string
+    required: true
+  - name: time_zone
+    type: string
+    required: false
+  - name: attendees
+    type: array
+    required: false
+  - name: optional_attendees
+    type: array
+    required: false
+  - name: location
+    type: string
+    required: false
+  - name: reminder_minutes
+    type: integer
+    required: false
+  - name: reminder_enabled
+    type: boolean
+    required: false
+  - name: online_meeting
+    type: boolean
+    required: false
+  result_fields:
+  - event_id
+  - join_url
+  - event
+  - confirmation
+  - changed
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - calendar_not_found
+  - online_meeting_unsupported
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: update_event
+  title: Update Outlook event
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: event_id
+    type: string
+    required: true
+  - name: subject
+    type: string
+    required: false
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: start
+    type: string
+    required: false
+  - name: end
+    type: string
+    required: false
+  - name: time_zone
+    type: string
+    required: false
+  - name: attendees
+    type: array
+    required: false
+  - name: optional_attendees
+    type: array
+    required: false
+  - name: location
+    type: string
+    required: false
+  - name: reminder_minutes
+    type: integer
+    required: false
+  - name: reminder_enabled
+    type: boolean
+    required: false
+  result_fields:
+  - event_id
+  - updated_fields
+  - confirmation
+  - changed
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: cancel_event
+  title: Cancel Outlook event
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: event_id
+    type: string
+    required: true
+  - name: comment
+    type: string
+    required: false
+  result_fields:
+  - event_id
+  - attendees_notified
+  - confirmation
+  - changed
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - not_organizer
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: respond_to_event
+  title: Respond to Outlook event
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: event_id
+    type: string
+    required: true
+  - name: response
+    type: string
+    required: true
+  - name: send_response
+    type: boolean
+    required: false
+  - name: comment
+    type: string
+    required: false
+  result_fields:
+  - event_id
+  - response
+  - response_sent
+  - confirmation
+  - changed
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: find_free_time
+  title: Find free time
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: addresses
+    type: array
+    required: true
+  - name: start
+    type: string
+    required: true
+  - name: end
+    type: string
+    required: true
+  - name: time_zone
+    type: string
+    required: false
+  - name: duration_minutes
+    type: integer
+    required: false
+  - name: working_hours_start
+    type: string
+    required: false
+  - name: working_hours_end
+    type: string
+    required: false
+  - name: slot_interval_minutes
+    type: integer
+    required: false
+  - name: include_weekends
+    type: boolean
+    required: false
+  - name: max_slots
+    type: integer
+    required: false
+  result_fields:
+  - complete
+  - common_slots
+  - slot_count
+  - truncated
+  - unresolved_addresses
+  - schedules
+  - time_zone
+  - window_start_utc
+  - window_end_utc
+  - duration_minutes
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - range_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: check_calendar_access
+  title: Check calendar access
+  description: Checks with real Graph reads that this app reads its own calendar and cannot read a control
+    mailbox's calendar outside its Exchange RBAC scope. Never writes.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  connection_type_ids:
+  - m365_calendar_app
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: control_mailbox
+    type: string
+    required: false
+  result_fields:
+  - control_mailbox
+  - verdict
+  - broad_access
+  - own_read
+  - own_read_error_code
+  - control_read
+  - control_read_error_code
+  - write_tested
+  - message
+  - note
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - internal_error
+- action_id: test_teams_connection
+  title: Test Teams connection
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - user_id
+  - display_name
+  - user_principal_name
+  - auth_mode
+  - joined_team_count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_teams
+  title: List Teams teams
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - teams
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_channels
+  title: List Teams channels
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: team_id
+    type: string
+    required: true
+  result_fields:
+  - team_id
+  - channels
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - team_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_chats
+  title: List Teams chats
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: topic_contains
+    type: string
+    required: false
+  - name: member
+    type: string
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - chats
+  - next_cursor
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_messages
+  title: List Teams messages
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: team_id
+    type: string
+    required: false
+  - name: channel_id
+    type: string
+    required: false
+  - name: chat_id
+    type: string
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - messages
+  - next_cursor
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - channel_not_found
+  - chat_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: post_channel_message
+  title: Post to a Teams channel
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: team_id
+    type: string
+    required: true
+  - name: channel_id
+    type: string
+    required: true
+  - name: subject
+    type: string
+    required: false
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: mentions
+    type: array
+    required: false
+  - name: file_links
+    type: array
+    required: false
+  result_fields:
+  - message_id
+  - team_id
+  - channel_id
+  - chat_id
+  - reply_to_id
+  - created_at
+  - web_url
+  - confirmation
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - channel_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: reply_to_message
+  title: Reply in a Teams channel thread
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: team_id
+    type: string
+    required: true
+  - name: channel_id
+    type: string
+    required: true
+  - name: message_id
+    type: string
+    required: true
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: mentions
+    type: array
+    required: false
+  - name: file_links
+    type: array
+    required: false
+  result_fields:
+  - message_id
+  - team_id
+  - channel_id
+  - chat_id
+  - reply_to_id
+  - created_at
+  - web_url
+  - confirmation
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - message_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: post_chat_message
+  title: Post to a Teams chat
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: chat_id
+    type: string
+    required: false
+  - name: user
+    type: string
+    required: false
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: mentions
+    type: array
+    required: false
+  - name: file_links
+    type: array
+    required: false
+  result_fields:
+  - message_id
+  - team_id
+  - channel_id
+  - chat_id
+  - reply_to_id
+  - created_at
+  - web_url
+  - confirmation
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - chat_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: deliver_notification
+  title: Deliver Notification
+  description: Send a project notification through an Outlook mailbox or a Microsoft Teams channel.
+  required_scopes:
+  - notify:dispatch
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  parameters:
+  - name: event
+    type: object
+    required: true
+  - name: route
+    type: object
+    required: true
+  result_fields:
+  - delivered
+  - provider_message_id
+  error_codes:
+  - recipient_required
+  - channel_required
+  - notification_connection_incompatible
+  - idempotency_key_missing
+  - webhook_rejected
+  - message_too_large
+  - authorization_required
+  - mailbox_access_denied
+  - rate_limited
+  - timeout_unknown

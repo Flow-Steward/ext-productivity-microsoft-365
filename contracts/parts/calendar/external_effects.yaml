@@ -1,0 +1,11 @@
+# Fragment for the external_effects of extension.yaml (merged by the lead). Task D2.
+# check_calendar_access is not here: it is a setup action that only reads.
+- operation_id: create_event
+  effect_kind: calendar_event_create
+  channel: microsoft_outlook_calendar
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [attendees, optional_attendees], target_kind: recipient, target_label: attendee}
+- {operation_id: update_event, effect_kind: calendar_event_update, channel: microsoft_outlook_calendar, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: cancel_event, effect_kind: calendar_event_cancel, channel: microsoft_outlook_calendar, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: respond_to_event, effect_kind: calendar_event_response, channel: microsoft_outlook_calendar, idempotency: required, test_mode_behavior: suppress}

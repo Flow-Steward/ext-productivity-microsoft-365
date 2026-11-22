@@ -1,0 +1,21 @@
+# Fragment for the external_effects of extension.yaml (merged by the lead). Task v0.2 D3.
+# Graph has no idempotency key for chat messages: "required" here means the step key
+# travels as a hidden marker and an ambiguous post is never repeated (timeout_unknown).
+- operation_id: post_channel_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [team_id, channel_id], target_kind: channel, target_label: channel}
+- operation_id: reply_to_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [team_id, channel_id], target_kind: channel, target_label: channel}
+- operation_id: post_chat_message
+  effect_kind: message_delivery
+  channel: microsoft_teams
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [chat_id, user], target_kind: recipient, target_label: chat}

@@ -1,6 +1,6 @@
 page_id: setup-guide
 title: Setup guide
-description: Register the Microsoft Entra app, choose permissions, and restrict which mailboxes the app can reach.
+description: Register the Microsoft Entra app, choose permissions, restrict which mailboxes the app can reach, and set up Teams.
 project_scoped: true
 components:
   - component_id: m365_setup_guide
@@ -9,7 +9,7 @@ components:
     body: |
       **Two ways to connect**
 
-      - **Signed-in user (delegated).** A person clicks *Connect with Microsoft* and approves access to their own mail, files or workbooks. Use it for a personal mailbox, a shared mailbox that person can open, and for Excel. Excel works only this way: Microsoft does not allow apps to edit workbooks without a user. The user signs in once; Flow Steward refreshes the access in the background.
+      - **Signed-in user (delegated).** A person clicks *Connect with Microsoft* and approves access to their own mail, calendar, files, workbooks or Teams. Use it for a personal mailbox, a shared mailbox that person can open, and for Excel and Teams. Excel and Teams posting work only this way: Microsoft does not allow apps to edit workbooks, or to post to channels and chats through Graph, without a user. The user signs in once; Flow Steward refreshes the access in the background.
       - **Organisation app (app-only).** An administrator registers an app once. Mailboxes such as `invoices@` or `cmr@` and SharePoint libraries are then added by address, with no person signed in. If the employee who set it up leaves, nothing breaks.
 
       <a id="register-app"></a>
@@ -25,12 +25,12 @@ components:
       <a id="delegated-permissions"></a>
       **2. Delegated permissions (signed-in users)**
 
-      Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`. Each user approves only the service they connect.
+      Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`, and for Teams `User.ReadBasic.All`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChannelMessage.Read.All`, `Chat.ReadWrite`, `ChatMessage.Send`. Each user approves only the service they connect. `ChannelMessage.Read.All` needs an administrator's consent: click *Grant admin consent* once.
 
       <a id="app-permissions"></a>
       **3. Application permissions (organisation app)**
 
-      - **Mail: do NOT add the application permissions `Mail.ReadWrite` or `Mail.Send` in Entra.** If they were added earlier, remove them and their admin consent. An Entra mail grant covers **every mailbox in the organisation**, and Exchange restrictions cannot narrow it: the two permission systems add up. Mail access is granted in Exchange instead (step 4).
+      - **Mail and calendar: do NOT add the application permissions `Mail.ReadWrite`, `Mail.Send` or any `Calendars.*` in Entra.** If they were added earlier, remove them and their admin consent. An Entra mail grant covers **every mailbox in the organisation**, and Exchange restrictions cannot narrow it: the two permission systems add up. Mail and calendar access is granted in Exchange instead (step 4).
       - **Files:** add `Sites.Selected` (recommended) and grant the app access to each SharePoint site (step 5). `Files.ReadWrite.All` also works but reaches every site.
       - Click *Grant admin consent*.
 
@@ -54,12 +54,30 @@ components:
 
       Changes can take up to two hours to apply. `Test-ServicePrincipalAuthorization -Identity <client-id> -Resource cmr@company.com` shows the Exchange side only; it does not see Entra grants. The real check is the **Check read/write access** action on each app-only mailbox: enter a *control mailbox* that must stay out of reach. That check covers reading and changing mail only, **not sending**: a broad Entra `Mail.Send` grant would still let the app send as any mailbox, so make sure step 3 is done.
 
+      **Calendars** use the same method. Put the calendar mailboxes in a scope and assign the calendar role:
+
+      ```powershell
+      New-ManagementScope -Name "Flow Steward calendars" `
+        -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'bookings@company.com'"
+      New-ManagementRoleAssignment -App <client-id> -Role "Application Calendars.ReadWrite" -CustomResourceScope "Flow Steward calendars"
+      ```
+
+      Check it with **Check calendar access** on each app-only calendar.
+
+      **System email mailbox.** To send password reset and welcome emails without SMTP, add a dedicated `noreply@company.com` to the mail scope above, connect it as an app-only mailbox, and let a platform administrator choose it in *Settings → Email*.
+
       Application access policies (`New-ApplicationAccessPolicy`) are the legacy way to do this; prefer RBAC for Applications.
 
       <a id="sites-selected"></a>
       **5. SharePoint sites for `Sites.Selected`**
 
       A SharePoint or global administrator grants the app write access to each site, for example with Microsoft Graph `POST /sites/{site-id}/permissions` (`roles: ["write"]`, `grantedToIdentities` = the app). Without a grant, *Add library* fails with `permission_denied`. With `Sites.Selected` there is no site search: enter the site URL and pick the library.
+
+      <a id="teams"></a>
+      **6. Teams**
+
+      - **Service user.** Create an account such as `flowsteward@company.com` with a Teams licence, add it to the teams and chats it should post to, and connect it on the *Microsoft Teams* page. Messages appear under its name.
+      - **Workflows webhook** (notifications only, no user): see *Create a Workflows webhook* on the *Microsoft Teams* page. The flow must allow *Anyone* to trigger it, and its owner's account must stay active.
 
       <a id="authorize-again"></a>
       **Authorize again**

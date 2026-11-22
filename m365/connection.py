@@ -1,9 +1,9 @@
 """Resolve the selected connection from a host payload.
 
-Five connection types exist (see README): ``m365_mail_user``, ``m365_mail_app``,
-``m365_files_user``, ``m365_files_app`` and ``m365_excel_user``. Delegated
+Connection types are listed in ``CONNECTION_TYPES`` (see README). Delegated
 (``_user``) types carry a Core-managed OAuth ``access_token``; app-only (``_app``)
-types carry their own ``client_secret`` plus ``tenant_id``/``client_id`` config.
+types carry their own ``client_secret`` plus ``tenant_id``/``client_id`` config;
+the webhook type carries only its secret ``webhook_url``.
 """
 
 from __future__ import annotations
@@ -21,7 +21,14 @@ CONNECTION_TYPES: dict[str, tuple[str, str]] = {
     "m365_files_user": ("files", "user"),
     "m365_files_app": ("files", "app"),
     "m365_excel_user": ("excel", "user"),
+    "m365_calendar_user": ("calendar", "user"),
+    "m365_calendar_app": ("calendar", "app"),
+    "m365_teams_user": ("teams", "user"),
+    "m365_teams_webhook": ("teams", "webhook"),
 }
+
+#: Services whose connection addresses one mailbox (``mailbox`` config).
+MAILBOX_SERVICES = frozenset({"mail", "calendar"})
 
 _GUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 _TENANT_DOMAIN = re.compile(
@@ -52,6 +59,7 @@ class ConnectionContext:
     config: dict[str, Any] = field(default_factory=dict)
     access_token: str = field(default="", repr=False)
     client_secret: str = field(default="", repr=False)
+    webhook_url: str = field(default="", repr=False)
 
     @property
     def is_app(self) -> bool:
@@ -73,6 +81,8 @@ class ConnectionContext:
 def connection_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     for candidate in (
         mapping(mapping(payload.get("action")).get("target")).get("connection"),
+        # Notification delivery: Core puts the route's connection here.
+        mapping(mapping(payload.get("action_payload")).get("target")).get("connection"),
         mapping(payload.get("target")).get("connection"),
     ):
         if isinstance(candidate, Mapping) and candidate:
@@ -112,6 +122,7 @@ def resolve_connection(
         config=config,
         access_token=text(secrets.get("access_token"), limit=16384) if mode == "user" else "",
         client_secret=text(secrets.get("client_secret"), limit=4096) if mode == "app" else "",
+        webhook_url=text(secrets.get("webhook_url"), limit=4096) if mode == "webhook" else "",
     )
     _validate(context)
     return context
@@ -121,6 +132,10 @@ def _validate(context: ConnectionContext) -> None:
     if context.mode == "user":
         if not context.access_token:
             raise M365Error("authorization_required", "Microsoft 365 authorization is required")
+    elif context.mode == "webhook":
+        if not context.webhook_url:
+            raise M365Error("invalid_connection", "The webhook connection has no webhook URL")
+        return
     else:
         if not valid_tenant(context.tenant_id) or not _GUID.match(context.client_id):
             raise M365Error(
@@ -128,10 +143,12 @@ def _validate(context: ConnectionContext) -> None:
             )
         if not context.client_secret:
             raise M365Error("invalid_client", "The app-only connection has no client secret")
-    if context.service == "mail":
+    if context.service in MAILBOX_SERVICES:
         mailbox = context.mailbox
         if context.mode == "app" and not mailbox:
-            raise M365Error("invalid_connection", "The app-only mail connection needs a mailbox")
+            raise M365Error(
+                "invalid_connection", f"The app-only {context.service} connection needs a mailbox"
+            )
         if mailbox and not _MAILBOX.match(mailbox):
             raise M365Error("invalid_connection", "The mailbox address is invalid")
 
@@ -147,12 +164,13 @@ def mailbox_base(context: ConnectionContext) -> str:
     if context.mailbox:
         return f"/users/{quote(context.mailbox, safe='@.')}"
     if context.is_app:
-        raise M365Error("invalid_connection", "The app-only mail connection needs a mailbox")
+        raise M365Error("invalid_connection", "The app-only connection needs a mailbox")
     return "/me"
 
 
 __all__ = [
     "CONNECTION_TYPES",
+    "MAILBOX_SERVICES",
     "ConnectionContext",
     "connection_payload",
     "mailbox_base",

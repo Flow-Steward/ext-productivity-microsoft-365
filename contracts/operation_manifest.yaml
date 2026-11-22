@@ -2200,3 +2200,1629 @@ operations:
   - response_too_large
   - timeout_unknown
   - internal_error
+- operation_id: test_calendar_connection
+  display_name: Test Outlook calendar connection
+  description: Mailbox address, display name (own mailbox of a signed-in user only), the default calendar,
+    and whether it allows Teams meetings (teamsForBusiness).
+  operation_kind: source
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: mailbox_address
+    value_type: text
+  - name: display_name
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: auth_mode
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - user
+      - app
+  - name: calendar_id
+    value_type: text
+  - name: calendar_name
+    value_type: text
+  - name: can_edit
+    value_type: boolean
+  - name: allowed_online_meeting_providers
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: string
+  - name: teams_meetings_allowed
+    value_type: boolean
+  result_fields:
+  - result.mailbox_address
+  - result.display_name
+  - result.auth_mode
+  - result.calendar_id
+  - result.calendar_name
+  - result.can_edit
+  - result.allowed_online_meeting_providers
+  - result.teams_meetings_allowed
+  error_codes: &id027
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_calendars
+  display_name: List Outlook calendars
+  description: Every calendar of the mailbox with its id, owner, edit right and allowed online meeting
+    providers.
+  operation_kind: source
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: calendars
+    value_type: array
+    schema:
+      type: array
+      maxItems: 500
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - calendar_id
+        - name
+        - color
+        - is_default
+        - can_edit
+        - owner
+        - allowed_online_meeting_providers
+        - default_online_meeting_provider
+        - teams_meetings_allowed
+        properties:
+          calendar_id:
+            type: string
+          name:
+            type: string
+          color:
+            type: string
+          is_default:
+            type: boolean
+          can_edit:
+            type: boolean
+          owner:
+            type:
+            - object
+            - 'null'
+          allowed_online_meeting_providers:
+            type: array
+            items:
+              type: string
+          default_online_meeting_provider:
+            type: string
+          teams_meetings_allowed:
+            type: boolean
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.calendars
+  - result.count
+  error_codes: *id027
+- operation_id: list_events
+  display_name: List Outlook events
+  description: Events between start and end (at most 31 days per call), recurring events expanded, ordered
+    by start. Optional calendar_id (default calendar otherwise). Opaque cursor.
+  operation_kind: source
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id029
+    name: calendar_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - &id043
+    name: start
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - &id044
+    name: end
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - &id030
+    name: time_zone
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 128
+  - name: limit
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 50
+  - name: cursor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 8192
+  outputs:
+  - name: events
+    value_type: array
+    schema:
+      type: array
+      maxItems: 100
+      items: &id028
+        type: object
+        required:
+        - event_id
+        - ical_uid
+        - series_master_id
+        - event_type
+        - subject
+        - start_utc
+        - end_utc
+        - start_time_zone
+        - end_time_zone
+        - start_local
+        - end_local
+        - is_all_day
+        - is_cancelled
+        - is_organizer
+        - organizer
+        - attendees
+        - location
+        - is_online_meeting
+        - online_meeting_provider
+        - join_url
+        - show_as
+        - response
+        - web_link
+        properties:
+          event_id:
+            type: string
+          ical_uid:
+            type: string
+          series_master_id:
+            type:
+            - string
+            - 'null'
+          event_type:
+            type: string
+          subject:
+            type: string
+          body_preview:
+            type: string
+          start_utc:
+            type:
+            - string
+            - 'null'
+          end_utc:
+            type:
+            - string
+            - 'null'
+          start_time_zone:
+            type: string
+          end_time_zone:
+            type: string
+          start_local:
+            type:
+            - string
+            - 'null'
+          end_local:
+            type:
+            - string
+            - 'null'
+          is_all_day:
+            type: boolean
+          is_cancelled:
+            type: boolean
+          is_organizer:
+            type: boolean
+          organizer:
+            type:
+            - object
+            - 'null'
+          attendees:
+            type: array
+          location:
+            type: string
+          is_online_meeting:
+            type: boolean
+          online_meeting_provider:
+            type: string
+          join_url:
+            type:
+            - string
+            - 'null'
+          show_as:
+            type: string
+          response:
+            type: string
+          web_link:
+            type: string
+          reminder_enabled:
+            type: boolean
+          reminder_minutes:
+            type:
+            - integer
+            - 'null'
+          importance:
+            type: string
+          sensitivity:
+            type: string
+          body_text:
+            type: string
+          body_text_truncated:
+            type: boolean
+  - name: count
+    value_type: integer
+  - name: next_cursor
+    value_type: text
+    schema:
+      type: string
+      maxLength: 8192
+  - name: window_start_utc
+    value_type: text
+  - name: window_end_utc
+    value_type: text
+  result_fields:
+  - result.events
+  - result.count
+  - result.next_cursor
+  - result.window_start_utc
+  - result.window_end_utc
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - calendar_not_found
+  - range_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: get_event
+  display_name: Get Outlook event
+  description: One event by id, with its text body (HTML converted by Outlook) unless include_body is
+    false.
+  operation_kind: source
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id031
+    name: event_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - name: include_body
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: true
+  outputs:
+  - name: event
+    value_type: object
+    schema: *id028
+  result_fields:
+  - result.event
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: create_event
+  display_name: Create Outlook event
+  description: Create an event or meeting in the default calendar or calendar_id. online_meeting adds
+    a Teams link; a calendar that does not allow teamsForBusiness fails with online_meeting_unsupported
+    before anything is created. An unconfirmed create is looked up by the step key and never sent twice.
+  operation_kind: action
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id029
+  - name: subject
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - &id032
+    name: body_text
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1000000
+  - &id033
+    name: body_html
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1000000
+  - name: start
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - name: end
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - *id030
+  - &id034
+    name: attendees
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 500
+  - &id035
+    name: optional_attendees
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 500
+  - &id036
+    name: location
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+  - &id037
+    name: reminder_minutes
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 0
+      maximum: 40320
+  - &id038
+    name: reminder_enabled
+    value_type: boolean
+    required: false
+  - name: online_meeting
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  input_mapping_rules:
+  - schema:
+      type: object
+      not:
+        required:
+        - body_text
+        - body_html
+    error:
+      code: body_source_ambiguous
+      message: Map a text body or an HTML body
+      not both.: null
+      field: body_text
+  outputs:
+  - name: event_id
+    value_type: text
+  - name: join_url
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: event
+    value_type: object
+    schema: *id028
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - created
+      - extended_property
+      - already_exists
+  - &id039
+    name: changed
+    value_type: boolean
+  - &id040
+    name: external_effect_status
+    value_type: text
+  - &id041
+    name: definitely_no_external_effect
+    value_type: boolean
+  result_fields:
+  - result.event_id
+  - result.join_url
+  - result.event
+  - result.confirmation
+  - result.changed
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - calendar_not_found
+  - online_meeting_unsupported
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: update_event
+  display_name: Update Outlook event
+  description: Change only the given fields. Outlook decides by itself whether attendees get an update;
+    there is no notify option.
+  operation_kind: action
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id031
+  - name: subject
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - *id032
+  - *id033
+  - name: start
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - name: end
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 64
+  - *id030
+  - *id034
+  - *id035
+  - *id036
+  - *id037
+  - *id038
+  input_mapping_rules:
+  - schema:
+      type: object
+      not:
+        required:
+        - body_text
+        - body_html
+    error:
+      code: body_source_ambiguous
+      message: Map a text body or an HTML body
+      not both.: null
+      field: body_text
+  outputs:
+  - name: event_id
+    value_type: text
+  - name: updated_fields
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: string
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - patched
+      - reread
+  - *id039
+  - *id040
+  - *id041
+  result_fields:
+  - result.event_id
+  - result.updated_fields
+  - result.confirmation
+  - result.changed
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: cancel_event
+  display_name: Cancel Outlook event
+  description: Organizer only. Cancels the meeting with an optional comment; Outlook notifies the attendees
+    and moves the event to Deleted Items. An event without attendees is deleted. A non-organizer gets
+    not_organizer and should decline with Respond to Outlook event. An event already cancelled or gone
+    is success with changed false.
+  operation_kind: action
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id031
+  - &id042
+    name: comment
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 10000
+  outputs:
+  - name: event_id
+    value_type: text
+  - name: attendees_notified
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - requested
+      - unknown
+      - none
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - cancel_accepted
+      - deleted
+      - reread
+      - already_cancelled
+      - already_gone
+  - *id039
+  - *id040
+  - *id041
+  result_fields:
+  - result.event_id
+  - result.attendees_notified
+  - result.confirmation
+  - result.changed
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - not_organizer
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: respond_to_event
+  display_name: Respond to Outlook event
+  description: Accept, tentatively accept or decline a meeting the mailbox was invited to, with send_response
+    (default true) and an optional comment. Whether the organizer received the response cannot be confirmed.
+  operation_kind: action
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id031
+  - name: response
+    value_type: text
+    required: true
+    schema:
+      type: string
+      enum:
+      - accept
+      - tentativelyAccept
+      - decline
+  - name: send_response
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: true
+  - *id042
+  outputs:
+  - name: event_id
+    value_type: text
+  - name: response
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - accepted
+      - tentativelyAccepted
+      - declined
+  - name: response_sent
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - requested
+      - unknown
+      - not_requested
+      - not_sent
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - response_accepted
+      - reread
+      - already_responded
+  - *id039
+  - *id040
+  - *id041
+  result_fields:
+  - result.event_id
+  - result.response
+  - result.response_sent
+  - result.confirmation
+  - result.changed
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - event_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: find_free_time
+  display_name: Find free time
+  description: Common free slots of up to 20 people from their free/busy (getSchedule), inside working
+    hours in time_zone. The window must be shorter than 62 days. If any address is unknown or errored,
+    complete is false and common_slots is empty; the other people's busy times are still returned for
+    display.
+  operation_kind: source
+  category: calendar
+  connection_type_ids:
+  - m365_calendar_user
+  - m365_calendar_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: addresses
+    value_type: array
+    required: true
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 20
+  - *id043
+  - *id044
+  - name: time_zone
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 128
+      default: UTC
+  - name: duration_minutes
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 5
+      maximum: 1440
+      multipleOf: 5
+      default: 30
+  - name: working_hours_start
+    value_type: text
+    required: false
+    schema:
+      type: string
+      pattern: ^([01][0-9]|2[0-3]):(00|15|30|45)$
+      default: 09:00
+  - name: working_hours_end
+    value_type: text
+    required: false
+    schema:
+      type: string
+      pattern: ^([01][0-9]|2[0-3]):(00|15|30|45)$
+      default: '17:00'
+  - name: slot_interval_minutes
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 15
+      maximum: 240
+      multipleOf: 15
+      default: 30
+  - name: include_weekends
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  - name: max_slots
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 20
+  outputs:
+  - name: complete
+    value_type: boolean
+  - name: common_slots
+    value_type: array
+    schema:
+      type: array
+      maxItems: 100
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - start_utc
+        - end_utc
+        - start_local
+        - end_local
+        properties:
+          start_utc:
+            type: string
+          end_utc:
+            type: string
+          start_local:
+            type: string
+          end_local:
+            type: string
+  - name: slot_count
+    value_type: integer
+  - name: truncated
+    value_type: boolean
+  - name: unresolved_addresses
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: string
+  - name: schedules
+    value_type: array
+    schema:
+      type: array
+      maxItems: 20
+      items:
+        type: object
+        required:
+        - address
+        - resolved
+        - unresolved_reason
+        - busy
+        properties:
+          address:
+            type: string
+          resolved:
+            type: boolean
+          unresolved_reason:
+            type:
+            - string
+            - 'null'
+            enum:
+            - null
+            - no_schedule
+            - error
+            - no_data
+            - unknown_availability
+            - invalid_schedule
+          error_message:
+            type:
+            - string
+            - 'null'
+          availability_view:
+            type: string
+          busy:
+            type: array
+  - name: time_zone
+    value_type: text
+  - name: window_start_utc
+    value_type: text
+  - name: window_end_utc
+    value_type: text
+  - name: duration_minutes
+    value_type: integer
+  result_fields:
+  - result.complete
+  - result.common_slots
+  - result.slot_count
+  - result.truncated
+  - result.unresolved_addresses
+  - result.schedules
+  - result.time_zone
+  - result.window_start_utc
+  - result.window_end_utc
+  - result.duration_minutes
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - range_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: test_teams_connection
+  display_name: Test Teams connection
+  description: The signed-in service user and the number of teams they have joined.
+  operation_kind: source
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: user_id
+    value_type: text
+  - name: display_name
+    value_type: text
+  - name: user_principal_name
+    value_type: text
+  - name: auth_mode
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - user
+  - name: joined_team_count
+    value_type: integer
+  result_fields:
+  - result.user_id
+  - result.display_name
+  - result.user_principal_name
+  - result.auth_mode
+  - result.joined_team_count
+  error_codes: &id045
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_teams
+  display_name: List Teams teams
+  description: Teams the signed-in user has joined.
+  operation_kind: source
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: teams
+    value_type: array
+    schema:
+      type: array
+      maxItems: 1000
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - team_id
+        - display_name
+        - description
+        properties:
+          team_id:
+            type: string
+          display_name:
+            type: string
+          description:
+            type: string
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.teams
+  - result.count
+  error_codes: *id045
+- operation_id: list_channels
+  display_name: List Teams channels
+  description: Channels of one team. Each row has a target (team_id/channel_id), the format of a Teams
+    notification route.
+  operation_kind: source
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: team_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 36
+      maxLength: 36
+  outputs:
+  - name: team_id
+    value_type: text
+  - name: channels
+    value_type: array
+    schema:
+      type: array
+      maxItems: 1000
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - channel_id
+        - team_id
+        - display_name
+        - description
+        - membership_type
+        - target
+        properties:
+          channel_id:
+            type: string
+          team_id:
+            type: string
+          display_name:
+            type: string
+          description:
+            type: string
+          membership_type:
+            type: string
+          target:
+            type: string
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.team_id
+  - result.channels
+  - result.count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - team_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_chats
+  display_name: List Teams chats
+  description: The signed-in user's chats, optionally filtered by topic text or by a member's address.
+    Opaque cursor.
+  operation_kind: source
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: topic_contains
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+  - name: member
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 320
+  - &id046
+    name: limit
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 50
+      default: 25
+  - &id047
+    name: cursor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 8192
+  outputs:
+  - name: chats
+    value_type: array
+    schema:
+      type: array
+      maxItems: 50
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - chat_id
+        - topic
+        - chat_type
+        - web_url
+        - last_updated_at
+        - members
+        properties:
+          chat_id:
+            type: string
+          topic:
+            type: string
+          chat_type:
+            type: string
+          web_url:
+            type: string
+          last_updated_at:
+            type:
+            - string
+            - 'null'
+          members:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - display_name
+              - email
+              - user_id
+              properties:
+                display_name:
+                  type: string
+                email:
+                  type: string
+                user_id:
+                  type: string
+  - &id048
+    name: next_cursor
+    value_type: text
+    schema:
+      type: string
+      maxLength: 8192
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.chats
+  - result.next_cursor
+  - result.count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_messages
+  display_name: List Teams messages
+  description: Recent messages of a channel (team_id + channel_id) or a chat (chat_id), newest first,
+    with the text body and sender. System events and deleted messages are skipped. Opaque cursor.
+  operation_kind: source
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: team_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 36
+      maxLength: 36
+  - name: channel_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 4
+      maxLength: 503
+  - &id056
+    name: chat_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 4
+      maxLength: 503
+  - *id046
+  - *id047
+  input_mapping_rules:
+  - schema:
+      type: object
+      oneOf:
+      - required:
+        - chat_id
+      - required:
+        - team_id
+        - channel_id
+    error:
+      code: channel_required
+      message: Map a team and channel
+      or a chat ID.: null
+      field: channel_id
+  outputs:
+  - name: messages
+    value_type: array
+    schema:
+      type: array
+      maxItems: 50
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - message_id
+        - reply_to_id
+        - created_at
+        - last_modified_at
+        - subject
+        - body_text
+        - importance
+        - sender
+        - web_url
+        properties:
+          message_id:
+            type: string
+          reply_to_id:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          last_modified_at:
+            type:
+            - string
+            - 'null'
+          subject:
+            type: string
+          body_text:
+            type: string
+          importance:
+            type: string
+          sender:
+            type: object
+            additionalProperties: false
+            required:
+            - display_name
+            - user_id
+            - kind
+            properties:
+              display_name:
+                type: string
+              user_id:
+                type: string
+              kind:
+                type: string
+                enum:
+                - user
+                - application
+                - unknown
+          web_url:
+            type: string
+  - *id048
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.messages
+  - result.next_cursor
+  - result.count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - channel_not_found
+  - chat_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: post_channel_message
+  display_name: Post to a Teams channel
+  description: Post a text or HTML message (optional subject, @mentions by address, file links) to a channel
+    as the signed-in service user. Messages above about 28 KB are refused. An unconfirmed post is never
+    repeated; it fails with timeout_unknown unless the step's hidden marker is found.
+  operation_kind: action
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: team_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 36
+      maxLength: 36
+  - name: channel_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 4
+      maxLength: 503
+  - name: subject
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+  - &id049
+    name: body_text
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 200000
+  - &id050
+    name: body_html
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 200000
+  - &id051
+    name: mentions
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 20
+      items:
+        type: string
+        maxLength: 320
+  - &id052
+    name: file_links
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 10
+  input_mapping_rules: &id053
+  - schema:
+      type: object
+      oneOf:
+      - required:
+        - body_text
+      - required:
+        - body_html
+    error:
+      code: body_required
+      message: Map a text body or an HTML body (exactly one).
+      field: body_text
+  outputs: &id054
+  - name: message_id
+    value_type: text
+  - name: team_id
+    value_type: text
+  - name: channel_id
+    value_type: text
+  - name: chat_id
+    value_type: text
+  - name: reply_to_id
+    value_type: text
+  - name: created_at
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: web_url
+    value_type: text
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - posted
+      - found_by_marker
+  - name: external_effect_status
+    value_type: text
+  - name: definitely_no_external_effect
+    value_type: boolean
+  result_fields: &id055
+  - result.message_id
+  - result.team_id
+  - result.channel_id
+  - result.chat_id
+  - result.reply_to_id
+  - result.created_at
+  - result.web_url
+  - result.confirmation
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - channel_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: reply_to_message
+  display_name: Reply in a Teams channel thread
+  description: Reply to a channel message (the thread's root message ID) with a text or HTML body, @mentions
+    and file links. Same size limit and ambiguous-post rule as Post to a Teams channel.
+  operation_kind: action
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: team_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 36
+      maxLength: 36
+  - name: channel_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 4
+      maxLength: 503
+  - name: message_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+  - *id049
+  - *id050
+  - *id051
+  - *id052
+  input_mapping_rules: *id053
+  outputs: *id054
+  result_fields: *id055
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - message_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: post_chat_message
+  display_name: Post to a Teams chat
+  description: Post to an existing chat (chat_id), or to the 1:1 chat with a user by address (user; Teams
+    reuses the existing 1:1 chat). Same size limit and ambiguous-post rule as Post to a Teams channel.
+  operation_kind: action
+  category: chat
+  connection_type_ids:
+  - m365_teams_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id056
+  - name: user
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 320
+  - *id049
+  - *id050
+  - *id051
+  - *id052
+  input_mapping_rules:
+  - schema:
+      type: object
+      oneOf:
+      - required:
+        - chat_id
+      - required:
+        - user
+    error:
+      code: chat_target_required
+      message: Map a chat ID or a user address (exactly one).
+      field: chat_id
+  - schema:
+      type: object
+      oneOf:
+      - required:
+        - body_text
+      - required:
+        - body_html
+    error:
+      code: body_required
+      message: Map a text body or an HTML body (exactly one).
+      field: body_text
+  outputs: *id054
+  result_fields: *id055
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - chat_not_found
+  - user_not_found
+  - message_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: deliver_notification
+  display_name: Deliver Notification
+  description: Internal notification-provider delivery through Outlook mail or Microsoft Teams.
+  operation_kind: action
+  category: notification
+  workflow_visible: false
+  inputs:
+  - name: event
+    value_type: object
+    required: true
+  - name: route
+    value_type: object
+    required: true
+  outputs:
+  - name: delivered
+    value_type: boolean
+  - name: provider_message_id
+    value_type: text
