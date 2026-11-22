@@ -1,0 +1,3 @@
+# Fragment for the external_effects of extension.yaml (merged by the lead). Task B5.4.
+- {operation_id: write_range, effect_kind: spreadsheet_write, channel: microsoft_excel, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: append_table_rows, effect_kind: spreadsheet_append, channel: microsoft_excel, idempotency: required, test_mode_behavior: suppress}

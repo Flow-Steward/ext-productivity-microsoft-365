@@ -1,0 +1,22 @@
+component_id: files_app_connections
+type: connection_form
+title: Libraries of the organisation app
+description: Add a SharePoint library by site URL and library. No person signs in.
+data:
+  connection_kind: extension
+  connection_type: m365_files_app
+  config_fields: [tenant_id, client_id, site_url, drive_id, client_secret_expires_on]
+  secret_fields: [client_secret]
+  required_secret_fields: [client_secret]
+  tags: [microsoft, sharepoint, files]
+  test_action: test_files_connection
+defaults:
+  display_name: SharePoint library
+fields:
+  - {path: display_name, label: Display name, widget: text}
+  - {path: site_url, label: Site URL, widget: text, required: true, help: "For example https://company.sharepoint.com/sites/Logistics"}
+  - {path: drive_id, label: Library (drive) ID, widget: text, help: "Fill in after List site libraries."}
+  - {path: tenant_id, label: Directory (tenant) ID, widget: text, required: true}
+  - {path: client_id, label: Application (client) ID, widget: text, required: true}
+  - {path: client_secret, label: Client secret, widget: secret, required: true}
+  - {path: client_secret_expires_on, label: Client secret expires on, widget: text}

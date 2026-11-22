@@ -47,7 +47,9 @@ class OperationContext:
             step_execution_id = runtime.step_execution_id or ""
         except ValueError:
             step_execution_id = ""
-        explicit = text(mapping(self.payload.get("runtime_context")).get("idempotency_key"), limit=256)
+        explicit = text(
+            mapping(self.payload.get("runtime_context")).get("idempotency_key"), limit=256
+        )
         key = explicit or step_execution_id
         if not key:
             raise M365Error("invalid_payload", "The step has no execution id for idempotency")
@@ -114,7 +116,9 @@ def run_operation(
             raise M365Error("invalid_payload", "Unknown Microsoft 365 operation")
         unknown = set(raw_input) - set(operation.fields) - {"connection_ref"}
         if unknown:
-            raise M365Error("invalid_payload", f"Unknown input fields: {', '.join(sorted(unknown))}")
+            raise M365Error(
+                "invalid_payload", f"Unknown input fields: {', '.join(sorted(unknown))}"
+            )
         is_test = test_mode(payload)
         if operation.effectful and is_test:
             return suppressed_response()

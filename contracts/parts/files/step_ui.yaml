@@ -1,0 +1,51 @@
+# Fragment for contracts/step_ui_manifest.yaml (merged by the lead). Task B5.3.
+# No resource_picker in v0.1 (DEV_NOTES): folders and items are typed as a path or
+# mapped as an ID from an earlier step (list_drive_items, search_drive_files,
+# upload_file, create_folder).
+- {operation_id: test_files_connection, title: Test OneDrive / SharePoint connection, fields: []}
+- operation_id: list_drive_items
+  title: List OneDrive / SharePoint folder
+  fields:
+    - &folder_path_field {name: folder_path, widget_type: text, label: Folder path, placeholder: /Invoices/2026, help_text: "A path from the library root. Leave empty for the root, or use Folder ID instead."}
+    - &folder_id_field {name: folder_id, widget_type: text, label: Folder ID, help_text: Map an item_id of an earlier step. Use either Folder path or Folder ID.}
+    - &limit_field {name: limit, widget_type: number, label: Limit, help_text: 1 to 200. Default 50.}
+    - &cursor_field {name: cursor, widget_type: text, label: Cursor, help_text: Map only a next_cursor returned by this operation with the same inputs.}
+- operation_id: search_drive_files
+  title: Search OneDrive / SharePoint files
+  fields:
+    - {name: query, widget_type: text, label: Search text (required), required: true, help_text: "Delegated connections search names and content across the drive. App-only connections match file names inside the chosen folder only, without subfolders."}
+    - *folder_path_field
+    - *folder_id_field
+    - {name: file_types, widget_type: json, label: File types, help_text: 'File extensions, for example ["pdf", "xlsx"].'}
+    - *limit_field
+    - *cursor_field
+- operation_id: download_file
+  title: Download OneDrive / SharePoint file
+  fields:
+    - &item_path_field {name: item_path, widget_type: text, label: File path, placeholder: /Invoices/2026/cmr-0042.pdf, help_text: A path from the library root. Use either File path or Item ID.}
+    - &item_id_field {name: item_id, widget_type: text, label: Item ID, help_text: Map an item_id of an earlier step. Use either File path or Item ID.}
+- operation_id: upload_file
+  title: Upload file to OneDrive / SharePoint
+  fields:
+    - {name: artifact_handle, widget_type: artifact_picker, label: Input artifact (required), required: true}
+    - {name: filename, widget_type: text, label: File name (required), required: true, help_text: 'A single name without " * : < > ? / \ | or two dots in a row.'}
+    - *folder_path_field
+    - *folder_id_field
+    - {name: conflict_behavior, widget_type: select, label: If the name exists, help_text: "Fail (default) leaves the existing file untouched. Rename lets Microsoft 365 pick a new name; after a timeout its result cannot be confirmed.", options: [{label: Fail, value: fail}, {label: Rename, value: rename}, {label: Replace, value: replace}]}
+- operation_id: create_folder
+  title: Create OneDrive / SharePoint folder
+  fields:
+    - {name: name, widget_type: text, label: Folder name (required), required: true}
+    - {name: parent_folder_path, widget_type: text, label: Parent folder path, placeholder: /Invoices, help_text: Leave empty for the library root, or use Parent folder ID instead.}
+    - {name: parent_folder_id, widget_type: text, label: Parent folder ID, help_text: Map an item_id of an earlier step.}
+- operation_id: create_share_link
+  title: Create OneDrive / SharePoint sharing link
+  fields:
+    - *item_path_field
+    - *item_id_field
+    - {name: link_type, widget_type: select, label: Link type, options: [{label: View, value: view}, {label: Edit, value: edit}]}
+    - {name: scope, widget_type: select, label: Who can use the link, help_text: Anyone links work only when the tenant allows them., options: [{label: People in the organization, value: organization}, {label: Anyone with the link, value: anonymous}]}
+- operation_id: list_site_libraries
+  title: List SharePoint site libraries
+  fields:
+    - {name: site_url, widget_type: text, label: Site URL, placeholder: https://contoso.sharepoint.com/sites/Finance, help_text: Leave empty to use the connection's site.}

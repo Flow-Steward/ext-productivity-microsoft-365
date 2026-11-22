@@ -1,0 +1,25 @@
+page_id: mail
+title: Outlook mail
+description: Connect Outlook mailboxes for this project, by a signed-in user or through the organisation app.
+components:
+  - component_id: mail_user_connections
+    type: connection_form
+    title: Mailboxes of signed-in users
+    description: A user signs in with Microsoft. Leave Mailbox empty for their own mailbox, or enter a shared mailbox they can open.
+    data:
+      oauth_provider_id: m365_oauth
+      connection_type: m365_mail_user
+      oauth_intent: mail_connect
+      test_action: test_connection
+  - ref: ../components/mail_app_connection_form.yaml
+  - component_id: mail_trigger_notes
+    type: markdown
+    title: New-email trigger
+    body: |
+      The *New Outlook email* workflow trigger is **off** for every mailbox until you switch it on for that mailbox. When it is switched on, Flow Steward checks the chosen folder every minute (at least every 30 seconds).
+
+      - Only email received **after** the first check is delivered. Mail received while the trigger is off is never delivered.
+      - Each new email starts the workflow once. A crash or restart does not lose or repeat it.
+      - One workflow watches one mailbox. For `invoices@` and `cmr@`, create two workflows.
+      - The trigger passes sender, subject, received time and the message ID. The workflow then reads the body and attachments with *Get message* and *Get attachment*.
+      - To react only to some subjects, add a condition step in the workflow; the trigger itself filters only by exact sender.

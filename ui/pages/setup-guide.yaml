@@ -1,0 +1,67 @@
+page_id: setup-guide
+title: Setup guide
+description: Register the Microsoft Entra app, choose permissions, and restrict which mailboxes the app can reach.
+project_scoped: true
+components:
+  - component_id: m365_setup_guide
+    type: markdown
+    title: Microsoft 365 setup guide
+    body: |
+      **Two ways to connect**
+
+      - **Signed-in user (delegated).** A person clicks *Connect with Microsoft* and approves access to their own mail, files or workbooks. Use it for a personal mailbox, a shared mailbox that person can open, and for Excel. Excel works only this way: Microsoft does not allow apps to edit workbooks without a user. The user signs in once; Flow Steward refreshes the access in the background.
+      - **Organisation app (app-only).** An administrator registers an app once. Mailboxes such as `invoices@` or `cmr@` and SharePoint libraries are then added by address, with no person signed in. If the employee who set it up leaves, nothing breaks.
+
+      <a id="register-app"></a>
+      **1. Register the app in Microsoft Entra ID**
+
+      In the Entra admin center open *App registrations → New registration*.
+      - **Supported account types:** choose *Accounts in any organizational directory (multi-tenant)*. A single-tenant app fails to sign in with error AADSTS50194; Flow Steward signs in through the `organizations` endpoint.
+      - **Redirect URI:** platform *Web*, and the exact Flow Steward callback URL shown on this extension's OAuth settings.
+      - Create a **client secret** under *Certificates & secrets*. Note its expiry date: when it expires, every connection that uses it stops with `client_secret_expired`.
+
+      Enter the Client ID and Client Secret in this extension's OAuth settings for signed-in connections. App-only connections take the tenant ID, client ID and client secret on each *Add mailbox* / *Add library* form.
+
+      <a id="delegated-permissions"></a>
+      **2. Delegated permissions (signed-in users)**
+
+      Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`. Each user approves only the service they connect.
+
+      <a id="app-permissions"></a>
+      **3. Application permissions (organisation app)**
+
+      - **Mail: do NOT add the application permissions `Mail.ReadWrite` or `Mail.Send` in Entra.** If they were added earlier, remove them and their admin consent. An Entra mail grant covers **every mailbox in the organisation**, and Exchange restrictions cannot narrow it: the two permission systems add up. Mail access is granted in Exchange instead (step 4).
+      - **Files:** add `Sites.Selected` (recommended) and grant the app access to each SharePoint site (step 5). `Files.ReadWrite.All` also works but reaches every site.
+      - Click *Grant admin consent*.
+
+      <a id="restrict-mailboxes"></a>
+      **4. Give the app only the chosen mailboxes (Exchange Online)**
+
+      Run in Exchange Online PowerShell (`Connect-ExchangeOnline`), replacing the values:
+
+      ```powershell
+      # The app's service principal in Exchange
+      New-ServicePrincipal -AppId <client-id> -ObjectId <enterprise-app-object-id> -DisplayName "Flow Steward"
+
+      # A scope with exactly the mailboxes Flow Steward may use
+      New-ManagementScope -Name "Flow Steward mailboxes" `
+        -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'invoices@company.com' -or PrimarySmtpAddress -eq 'cmr@company.com'"
+
+      # Read/write and send, only inside that scope
+      New-ManagementRoleAssignment -App <client-id> -Role "Application Mail.ReadWrite" -CustomResourceScope "Flow Steward mailboxes"
+      New-ManagementRoleAssignment -App <client-id> -Role "Application Mail.Send" -CustomResourceScope "Flow Steward mailboxes"
+      ```
+
+      Changes can take up to two hours to apply. `Test-ServicePrincipalAuthorization -Identity <client-id> -Resource cmr@company.com` shows the Exchange side only; it does not see Entra grants. The real check is the **Check read/write access** action on each app-only mailbox: enter a *control mailbox* that must stay out of reach. That check covers reading and changing mail only, **not sending**: a broad Entra `Mail.Send` grant would still let the app send as any mailbox, so make sure step 3 is done.
+
+      Application access policies (`New-ApplicationAccessPolicy`) are the legacy way to do this; prefer RBAC for Applications.
+
+      <a id="sites-selected"></a>
+      **5. SharePoint sites for `Sites.Selected`**
+
+      A SharePoint or global administrator grants the app write access to each site, for example with Microsoft Graph `POST /sites/{site-id}/permissions` (`roles: ["write"]`, `grantedToIdentities` = the app). Without a grant, *Add library* fails with `permission_denied`. With `Sites.Selected` there is no site search: enter the site URL and pick the library.
+
+      <a id="authorize-again"></a>
+      **Authorize again**
+
+      `authorization_required` on a signed-in connection means the user's access was revoked or expired. Open the connection and click *Reconnect*.

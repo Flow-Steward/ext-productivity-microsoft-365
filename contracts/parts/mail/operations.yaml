@@ -1,0 +1,282 @@
+# Fragment for contracts/operation_manifest.yaml (merged by the lead). Task B5.1.
+# Every operation serves both mail connection types. No required_oauth_scopes: an
+# app-only type has no OAuth scopes, and the mail_connect intent requests the
+# delegated ones (B4.4). check_mail_access is a Mail page action only (actions.yaml).
+- operation_id: test_connection
+  display_name: Test Outlook connection
+  description: Mailbox address, display name (own mailbox of a signed-in user only), Inbox total and unread counts.
+  operation_kind: source
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+  outputs:
+    - {name: mailbox_address, value_type: text}
+    - {name: display_name, value_type: text, schema: {type: [string, "null"]}}
+    - {name: auth_mode, value_type: text, schema: {type: string, enum: [user, app]}}
+    - {name: inbox_total, value_type: integer}
+    - {name: inbox_unread, value_type: integer}
+  result_fields: [result.mailbox_address, result.display_name, result.auth_mode, result.inbox_total, result.inbox_unread]
+  error_codes: &mail_read_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: list_mail_folders
+  display_name: List Outlook folders
+  description: Well-known folder shortcuts (inbox, archive, sentitems, drafts, deleteditems, junkemail) plus every folder, nested, with its path.
+  operation_kind: source
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+  outputs:
+    - name: well_known
+      value_type: array
+      schema:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required: [folder_id, display_name, path, well_known_name, is_well_known_shortcut]
+          properties:
+            folder_id: {type: string}
+            display_name: {type: string}
+            path: {type: string}
+            well_known_name: {type: string}
+            is_well_known_shortcut: {type: boolean, const: true}
+    - name: folders
+      value_type: array
+      schema:
+        type: array
+        maxItems: 1000
+        items:
+          type: object
+          additionalProperties: false
+          required: [folder_id, display_name, path, parent_folder_id, well_known_name, depth, total_count, unread_count, child_folder_count, is_well_known_shortcut]
+          properties:
+            folder_id: {type: string}
+            display_name: {type: string}
+            path: {type: string}
+            parent_folder_id: {type: [string, "null"]}
+            well_known_name: {type: [string, "null"]}
+            depth: {type: integer}
+            total_count: {type: integer}
+            unread_count: {type: integer}
+            child_folder_count: {type: integer}
+            is_well_known_shortcut: {type: boolean, const: false}
+    - {name: truncated, value_type: boolean}
+  result_fields: [result.well_known, result.folders, result.truncated]
+  error_codes: *mail_read_errors
+- operation_id: search_messages
+  display_name: Search Outlook messages
+  description: Messages of one folder, newest first, with typed filters, or a free-text query (Graph $search, which cannot be combined with the filters). Opaque cursor.
+  operation_kind: source
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: folder, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 1024, default: inbox}}
+    - {name: from, value_type: text, required: false, schema: {type: string, maxLength: 320}}
+    - {name: subject_contains, value_type: text, required: false, schema: {type: string, maxLength: 255}}
+    - {name: unread, value_type: boolean, required: false}
+    - {name: has_attachments, value_type: boolean, required: false}
+    - {name: received_after, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
+    - {name: received_before, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
+    - {name: query, value_type: text, required: false, schema: {type: string, maxLength: 255}}
+    - {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 25}}
+    - {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 8192}}
+  outputs:
+    - name: messages
+      value_type: array
+      schema:
+        type: array
+        maxItems: 100
+        items: &message_summary
+          type: object
+          required: [message_id, internet_message_id, conversation_id, subject, from, to, cc, received_at, sent_at, is_read, is_draft, has_attachments, importance, flag_status, folder_id]
+          properties:
+            message_id: {type: string}
+            internet_message_id: {type: string}
+            conversation_id: {type: string}
+            subject: {type: string}
+            from: {type: [object, "null"]}
+            to: {type: array}
+            cc: {type: array}
+            received_at: {type: [string, "null"]}
+            sent_at: {type: [string, "null"]}
+            is_read: {type: boolean}
+            is_draft: {type: boolean}
+            has_attachments: {type: boolean}
+            importance: {type: string}
+            flag_status: {type: string, enum: [flagged, complete, notFlagged]}
+            folder_id: {type: string}
+            preview: {type: string}
+    - {name: next_cursor, value_type: text, schema: {type: string, maxLength: 8192}}
+    - {name: count, value_type: integer}
+  result_fields: [result.messages, result.next_cursor, result.count]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, folder_not_found, search_unsupported, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: get_message
+  display_name: Get Outlook message
+  description: One message with its text body (HTML converted by Outlook), optional raw HTML, internet headers and attachment metadata.
+  operation_kind: source
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+    - {name: include_body, value_type: boolean, required: false, schema: {type: boolean, default: true}}
+    - {name: include_headers, value_type: boolean, required: false, schema: {type: boolean, default: true}}
+    - {name: include_attachment_metadata, value_type: boolean, required: false, schema: {type: boolean, default: true}}
+    - {name: include_raw_html, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+  outputs:
+    - {name: message, value_type: object}
+  result_fields: [result.message]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: get_attachment
+  display_name: Get Outlook attachment
+  description: One file attachment into an artifact. Attached messages (itemAttachment) and cloud links (referenceAttachment) are refused.
+  operation_kind: source
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+    - {name: attachment_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+  outputs:
+    - {name: attachment_artifact_handle, value_type: artifact_handle}
+    - name: attachment_metadata
+      value_type: object
+      schema:
+        type: object
+        additionalProperties: false
+        required: [message_id, attachment_id, original_filename, content_type, size_bytes, sha256, is_inline]
+        properties:
+          message_id: {type: string}
+          attachment_id: {type: string}
+          original_filename: {type: string}
+          content_type: {type: string}
+          size_bytes: {type: integer}
+          sha256: {type: string}
+          is_inline: {type: boolean}
+  result_fields: [result.attachment_artifact_handle, result.attachment_metadata]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, attachment_not_found, attachment_type_unsupported, attachment_too_large, artifact_output_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: send_message
+  display_name: Send Outlook email
+  description: Send as the connection's mailbox through a draft carrying the step's idempotency key. Give the step a retry policy so an attachment_state_unknown failure is retried with a fresh draft.
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - &recipients_to {name: to, value_type: array, required: false, schema: {type: array, maxItems: 500}}
+    - &recipients_cc {name: cc, value_type: array, required: false, schema: {type: array, maxItems: 500}}
+    - &recipients_bcc {name: bcc, value_type: array, required: false, schema: {type: array, maxItems: 500}}
+    - {name: reply_to, value_type: array, required: false, schema: {type: array, maxItems: 10}}
+    - {name: subject, value_type: text, required: false, schema: {type: string, maxLength: 998}}
+    - {name: body_text, value_type: text, required: false, schema: {type: string, maxLength: 1000000}}
+    - {name: body_html, value_type: text, required: false, schema: {type: string, maxLength: 1000000}}
+    - {name: importance, value_type: text, required: false, schema: {type: string, enum: [low, normal, high], default: normal}}
+    - &attachments_input {name: attachments, value_type: array, required: false, schema: {type: array, maxItems: 20}}
+  input_mapping_rules:
+    - schema:
+        type: object
+        anyOf: [{required: [to]}, {required: [cc]}, {required: [bcc]}]
+      error: {code: recipient_required, message: Map at least one recipient in To, Cc or Bcc., field: to}
+    - schema:
+        type: object
+        not: {required: [body_text, body_html]}
+      error: {code: body_source_ambiguous, message: Map a text body or an HTML body, not both., field: body_text}
+  outputs: &send_outputs
+    - {name: message_id, value_type: text}
+    - {name: confirmation, value_type: text, schema: {type: string, enum: [send_accepted, immutable_id, sent_items_search, already_sent]}}
+    - {name: attachment_count, value_type: integer}
+    - {name: external_effect_status, value_type: text}
+    - {name: definitely_no_external_effect, value_type: boolean}
+  result_fields: &send_result_fields [result.message_id, result.confirmation, result.attachment_count, result.external_effect_status, result.definitely_no_external_effect]
+  error_codes: &send_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, artifact_input_unavailable, attachment_too_large, attachment_upload_failed, attachment_state_unknown, egress_host_not_allowed, file_too_large, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: reply_message
+  display_name: Reply to Outlook email
+  description: Reply (or reply all) to the original message by its id, with a comment and extra attachments, through the same draft-then-send flow.
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+    - {name: reply_all, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+    - &comment_input {name: comment, value_type: text, required: false, schema: {type: string, maxLength: 1000000}}
+    - *attachments_input
+  outputs: *send_outputs
+  result_fields: *send_result_fields
+  error_codes: &reply_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, artifact_input_unavailable, attachment_too_large, attachment_upload_failed, attachment_state_unknown, egress_host_not_allowed, file_too_large, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: forward_message
+  display_name: Forward Outlook email
+  description: Forward the original message by its id to new recipients, with a comment and extra attachments, through the same draft-then-send flow.
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+    - {name: to, value_type: array, required: true, schema: {type: array, minItems: 1, maxItems: 500}}
+    - *recipients_cc
+    - *recipients_bcc
+    - *comment_input
+    - *attachments_input
+  outputs: *send_outputs
+  result_fields: *send_result_fields
+  error_codes: *reply_errors
+- operation_id: set_message_flags
+  display_name: Set Outlook message flags
+  description: Set read state and follow-up flag with absolute values (idempotent).
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - &message_ids_input {name: message_ids, value_type: array, required: true, schema: {type: array, minItems: 1, maxItems: 100, items: {type: string, minLength: 1, maxLength: 1024}}}
+    - {name: is_read, value_type: boolean, required: false}
+    - {name: flag_status, value_type: text, required: false, schema: {type: string, enum: [flagged, complete, notFlagged]}}
+  outputs: &mutation_outputs
+    - name: results
+      value_type: array
+      schema:
+        type: array
+        maxItems: 100
+        items:
+          type: object
+          required: [requested_message_id, message_id, status]
+          properties:
+            requested_message_id: {type: string}
+            message_id: {type: string}
+            status: {type: string, enum: [succeeded, failed, timeout_unknown, not_attempted]}
+            changed: {type: boolean}
+            error_code: {type: string}
+    - {name: changed_count, value_type: integer}
+    - {name: changed, value_type: boolean}
+    - {name: external_effect_status, value_type: text}
+    - {name: definitely_no_external_effect, value_type: boolean}
+  result_fields: &mutation_result_fields [result.results, result.changed_count, result.changed, result.external_effect_status, result.definitely_no_external_effect]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+- operation_id: move_messages
+  display_name: Move Outlook messages
+  description: Move to a folder id or well-known name. Returns each message's immutable id; a message already in the destination is success with changed false.
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *message_ids_input
+    - {name: destination_folder, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
+  outputs: *mutation_outputs
+  result_fields: *mutation_result_fields
+  error_codes: &move_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, folder_not_found, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+- operation_id: delete_messages
+  display_name: Move Outlook messages to Deleted Items
+  description: Moves to Deleted Items only; never deletes permanently. A message already there is success with changed false.
+  operation_kind: action
+  category: email
+  connection_type_ids: [m365_mail_user, m365_mail_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *message_ids_input
+  outputs: *mutation_outputs
+  result_fields: *mutation_result_fields
+  error_codes: *move_errors

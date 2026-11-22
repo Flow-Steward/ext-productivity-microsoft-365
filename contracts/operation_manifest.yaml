@@ -1,0 +1,2202 @@
+operations:
+- operation_id: test_connection
+  display_name: Test Outlook connection
+  description: Mailbox address, display name (own mailbox of a signed-in user only), Inbox total and unread
+    counts.
+  operation_kind: source
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: mailbox_address
+    value_type: text
+  - name: display_name
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: auth_mode
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - user
+      - app
+  - name: inbox_total
+    value_type: integer
+  - name: inbox_unread
+    value_type: integer
+  result_fields:
+  - result.mailbox_address
+  - result.display_name
+  - result.auth_mode
+  - result.inbox_total
+  - result.inbox_unread
+  error_codes: &id001
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_mail_folders
+  display_name: List Outlook folders
+  description: Well-known folder shortcuts (inbox, archive, sentitems, drafts, deleteditems, junkemail)
+    plus every folder, nested, with its path.
+  operation_kind: source
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: well_known
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - folder_id
+        - display_name
+        - path
+        - well_known_name
+        - is_well_known_shortcut
+        properties:
+          folder_id:
+            type: string
+          display_name:
+            type: string
+          path:
+            type: string
+          well_known_name:
+            type: string
+          is_well_known_shortcut:
+            type: boolean
+            const: true
+  - name: folders
+    value_type: array
+    schema:
+      type: array
+      maxItems: 1000
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - folder_id
+        - display_name
+        - path
+        - parent_folder_id
+        - well_known_name
+        - depth
+        - total_count
+        - unread_count
+        - child_folder_count
+        - is_well_known_shortcut
+        properties:
+          folder_id:
+            type: string
+          display_name:
+            type: string
+          path:
+            type: string
+          parent_folder_id:
+            type:
+            - string
+            - 'null'
+          well_known_name:
+            type:
+            - string
+            - 'null'
+          depth:
+            type: integer
+          total_count:
+            type: integer
+          unread_count:
+            type: integer
+          child_folder_count:
+            type: integer
+          is_well_known_shortcut:
+            type: boolean
+            const: false
+  - name: truncated
+    value_type: boolean
+  result_fields:
+  - result.well_known
+  - result.folders
+  - result.truncated
+  error_codes: *id001
+- operation_id: search_messages
+  display_name: Search Outlook messages
+  description: Messages of one folder, newest first, with typed filters, or a free-text query (Graph $search,
+    which cannot be combined with the filters). Opaque cursor.
+  operation_kind: source
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: folder
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+      default: inbox
+  - name: from
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 320
+  - name: subject_contains
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+  - name: unread
+    value_type: boolean
+    required: false
+  - name: has_attachments
+    value_type: boolean
+    required: false
+  - name: received_after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 64
+      format: date-time
+  - name: received_before
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 64
+      format: date-time
+  - name: query
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+  - name: limit
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 25
+  - name: cursor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 8192
+  outputs:
+  - name: messages
+    value_type: array
+    schema:
+      type: array
+      maxItems: 100
+      items:
+        type: object
+        required:
+        - message_id
+        - internet_message_id
+        - conversation_id
+        - subject
+        - from
+        - to
+        - cc
+        - received_at
+        - sent_at
+        - is_read
+        - is_draft
+        - has_attachments
+        - importance
+        - flag_status
+        - folder_id
+        properties:
+          message_id:
+            type: string
+          internet_message_id:
+            type: string
+          conversation_id:
+            type: string
+          subject:
+            type: string
+          from:
+            type:
+            - object
+            - 'null'
+          to:
+            type: array
+          cc:
+            type: array
+          received_at:
+            type:
+            - string
+            - 'null'
+          sent_at:
+            type:
+            - string
+            - 'null'
+          is_read:
+            type: boolean
+          is_draft:
+            type: boolean
+          has_attachments:
+            type: boolean
+          importance:
+            type: string
+          flag_status:
+            type: string
+            enum:
+            - flagged
+            - complete
+            - notFlagged
+          folder_id:
+            type: string
+          preview:
+            type: string
+  - name: next_cursor
+    value_type: text
+    schema:
+      type: string
+      maxLength: 8192
+  - name: count
+    value_type: integer
+  result_fields:
+  - result.messages
+  - result.next_cursor
+  - result.count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - folder_not_found
+  - search_unsupported
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: get_message
+  display_name: Get Outlook message
+  description: One message with its text body (HTML converted by Outlook), optional raw HTML, internet
+    headers and attachment metadata.
+  operation_kind: source
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: message_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - name: include_body
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: true
+  - name: include_headers
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: true
+  - name: include_attachment_metadata
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: true
+  - name: include_raw_html
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  outputs:
+  - name: message
+    value_type: object
+  result_fields:
+  - result.message
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: get_attachment
+  display_name: Get Outlook attachment
+  description: One file attachment into an artifact. Attached messages (itemAttachment) and cloud links
+    (referenceAttachment) are refused.
+  operation_kind: source
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: message_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - name: attachment_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: attachment_artifact_handle
+    value_type: artifact_handle
+  - name: attachment_metadata
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - message_id
+      - attachment_id
+      - original_filename
+      - content_type
+      - size_bytes
+      - sha256
+      - is_inline
+      properties:
+        message_id:
+          type: string
+        attachment_id:
+          type: string
+        original_filename:
+          type: string
+        content_type:
+          type: string
+        size_bytes:
+          type: integer
+        sha256:
+          type: string
+        is_inline:
+          type: boolean
+  result_fields:
+  - result.attachment_artifact_handle
+  - result.attachment_metadata
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - attachment_not_found
+  - attachment_type_unsupported
+  - attachment_too_large
+  - artifact_output_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: send_message
+  display_name: Send Outlook email
+  description: Send as the connection's mailbox through a draft carrying the step's idempotency key. Give
+    the step a retry policy so an attachment_state_unknown failure is retried with a fresh draft.
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: to
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 500
+  - &id005
+    name: cc
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 500
+  - &id006
+    name: bcc
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 500
+  - name: reply_to
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 10
+  - name: subject
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 998
+  - name: body_text
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1000000
+  - name: body_html
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1000000
+  - name: importance
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - low
+      - normal
+      - high
+      default: normal
+  - &id002
+    name: attachments
+    value_type: array
+    required: false
+    schema:
+      type: array
+      maxItems: 20
+  input_mapping_rules:
+  - schema:
+      type: object
+      anyOf:
+      - required:
+        - to
+      - required:
+        - cc
+      - required:
+        - bcc
+    error:
+      code: recipient_required
+      message: Map at least one recipient in To
+      Cc or Bcc.: null
+      field: to
+  - schema:
+      type: object
+      not:
+        required:
+        - body_text
+        - body_html
+    error:
+      code: body_source_ambiguous
+      message: Map a text body or an HTML body
+      not both.: null
+      field: body_text
+  outputs: &id003
+  - name: message_id
+    value_type: text
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - send_accepted
+      - immutable_id
+      - sent_items_search
+      - already_sent
+  - name: attachment_count
+    value_type: integer
+  - name: external_effect_status
+    value_type: text
+  - name: definitely_no_external_effect
+    value_type: boolean
+  result_fields: &id004
+  - result.message_id
+  - result.confirmation
+  - result.attachment_count
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - artifact_input_unavailable
+  - attachment_too_large
+  - attachment_upload_failed
+  - attachment_state_unknown
+  - egress_host_not_allowed
+  - file_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: reply_message
+  display_name: Reply to Outlook email
+  description: Reply (or reply all) to the original message by its id, with a comment and extra attachments,
+    through the same draft-then-send flow.
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: message_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - name: reply_all
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  - &id007
+    name: comment
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1000000
+  - *id002
+  outputs: *id003
+  result_fields: *id004
+  error_codes: &id008
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - artifact_input_unavailable
+  - attachment_too_large
+  - attachment_upload_failed
+  - attachment_state_unknown
+  - egress_host_not_allowed
+  - file_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: forward_message
+  display_name: Forward Outlook email
+  description: Forward the original message by its id to new recipients, with a comment and extra attachments,
+    through the same draft-then-send flow.
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: message_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  - name: to
+    value_type: array
+    required: true
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 500
+  - *id005
+  - *id006
+  - *id007
+  - *id002
+  outputs: *id003
+  result_fields: *id004
+  error_codes: *id008
+- operation_id: set_message_flags
+  display_name: Set Outlook message flags
+  description: Set read state and follow-up flag with absolute values (idempotent).
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id009
+    name: message_ids
+    value_type: array
+    required: true
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 100
+      items:
+        type: string
+        minLength: 1
+        maxLength: 1024
+  - name: is_read
+    value_type: boolean
+    required: false
+  - name: flag_status
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - flagged
+      - complete
+      - notFlagged
+  outputs: &id010
+  - name: results
+    value_type: array
+    schema:
+      type: array
+      maxItems: 100
+      items:
+        type: object
+        required:
+        - requested_message_id
+        - message_id
+        - status
+        properties:
+          requested_message_id:
+            type: string
+          message_id:
+            type: string
+          status:
+            type: string
+            enum:
+            - succeeded
+            - failed
+            - timeout_unknown
+            - not_attempted
+          changed:
+            type: boolean
+          error_code:
+            type: string
+  - name: changed_count
+    value_type: integer
+  - name: changed
+    value_type: boolean
+  - name: external_effect_status
+    value_type: text
+  - name: definitely_no_external_effect
+    value_type: boolean
+  result_fields: &id011
+  - result.results
+  - result.changed_count
+  - result.changed
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - timeout_unknown
+  - internal_error
+- operation_id: move_messages
+  display_name: Move Outlook messages
+  description: Move to a folder id or well-known name. Returns each message's immutable id; a message
+    already in the destination is success with changed false.
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id009
+  - name: destination_folder
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 1024
+  outputs: *id010
+  result_fields: *id011
+  error_codes: &id012
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - folder_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - timeout_unknown
+  - internal_error
+- operation_id: delete_messages
+  display_name: Move Outlook messages to Deleted Items
+  description: Moves to Deleted Items only; never deletes permanently. A message already there is success
+    with changed false.
+  operation_kind: action
+  category: email
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id009
+  outputs: *id010
+  result_fields: *id011
+  error_codes: *id012
+- operation_id: test_files_connection
+  display_name: Test OneDrive / SharePoint connection
+  description: Resolves the connection's drive (own OneDrive, a site's default library, a drive ID, or
+    the app-only library) and returns its name, site and quota when available. App-only connections also
+    check that the library belongs to the configured site.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: mode
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - user
+      - app
+  - name: drive_id
+    value_type: text
+  - name: drive_name
+    value_type: text
+  - name: drive_type
+    value_type: text
+  - name: drive_web_url
+    value_type: text
+  - name: quota
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      properties:
+        total:
+          type:
+          - integer
+          - 'null'
+        used:
+          type:
+          - integer
+          - 'null'
+        remaining:
+          type:
+          - integer
+          - 'null'
+        state:
+          type:
+          - string
+          - 'null'
+  - name: site_id
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: site_name
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: site_web_url
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  result_fields:
+  - result.mode
+  - result.drive_id
+  - result.drive_name
+  - result.drive_type
+  - result.drive_web_url
+  - result.quota
+  - result.site_id
+  - result.site_name
+  - result.site_web_url
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - drive_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_drive_items
+  display_name: List OneDrive / SharePoint folder
+  description: Lists one folder, addressed by folder_id or folder_path (default the library root), one
+    page at a time with an opaque cursor.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id013
+    name: folder_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 256
+  - &id014
+    name: folder_path
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 400
+  - &id015
+    name: limit
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 200
+      default: 50
+  - &id016
+    name: cursor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 8192
+  input_mapping_rules:
+  - &id017
+    schema:
+      type: object
+      not:
+        required:
+        - folder_id
+        - folder_path
+    error:
+      code: invalid_payload
+      message: Map a folder ID or a folder path
+      not both.: null
+      field: folder_id
+  outputs:
+  - &id018
+    name: items
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - item_id
+        - name
+        - drive_id
+        - parent_id
+        - path
+        - is_folder
+        - size
+        - mime_type
+        - modified_at
+        - web_url
+        - child_count
+        - quick_xor_hash
+        properties:
+          item_id:
+            type: string
+          name:
+            type: string
+          drive_id:
+            type:
+            - string
+            - 'null'
+          parent_id:
+            type:
+            - string
+            - 'null'
+          path:
+            type:
+            - string
+            - 'null'
+          is_folder:
+            type: boolean
+          size:
+            type:
+            - integer
+            - 'null'
+          mime_type:
+            type:
+            - string
+            - 'null'
+          modified_at:
+            type:
+            - string
+            - 'null'
+          web_url:
+            type:
+            - string
+            - 'null'
+          child_count:
+            type:
+            - integer
+            - 'null'
+          quick_xor_hash:
+            type:
+            - string
+            - 'null'
+  - &id019
+    name: next_cursor
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+      maxLength: 8192
+  result_fields:
+  - result.items
+  - result.next_cursor
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - item_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: search_drive_files
+  display_name: Search OneDrive / SharePoint files
+  description: 'Delegated connections: Graph drive search (recursive, names and content), optionally kept
+    to one folder and filtered by file type. App-only connections: a case-insensitive name filter inside
+    one folder, not recursive, because Sites.Selected grants no search. search_mode in the result says
+    which ran.'
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: query
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - *id013
+  - *id014
+  - name: file_types
+    value_type: array
+    required: false
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 20
+      items:
+        type: string
+        minLength: 1
+        maxLength: 17
+  - *id015
+  - *id016
+  input_mapping_rules:
+  - *id017
+  outputs:
+  - *id018
+  - *id019
+  - name: search_mode
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - drive_search
+      - folder_name_filter
+  result_fields:
+  - result.items
+  - result.next_cursor
+  - result.search_mode
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - item_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: download_file
+  display_name: Download OneDrive / SharePoint file
+  description: Streams one file, addressed by item_id or item_path, into an artifact (limit FS_EXTENSION_ARTIFACT_MAX_BYTES,
+    default 200 MB). The pre-authenticated download URL is used without the Graph token and never returned.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id022
+    name: item_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 256
+  - &id023
+    name: item_path
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 400
+  input_mapping_rules:
+  - &id024
+    schema:
+      type: object
+      oneOf:
+      - required:
+        - item_id
+      - required:
+        - item_path
+    error:
+      code: invalid_payload
+      message: Map exactly one of item ID or item path.
+      field: item_id
+  outputs:
+  - name: artifact_handle
+    value_type: artifact_handle
+  - name: filename
+    value_type: text
+  - name: mime_type
+    value_type: text
+  - name: size
+    value_type: integer
+  - name: sha256
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: item_id
+    value_type: text
+  - name: drive_id
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: modified_at
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: web_url
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  result_fields:
+  - result.artifact_handle
+  - result.filename
+  - result.mime_type
+  - result.size
+  - result.sha256
+  - result.item_id
+  - result.drive_id
+  - result.modified_at
+  - result.web_url
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - item_not_found
+  - file_too_large
+  - artifact_output_unavailable
+  - egress_host_not_allowed
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: upload_file
+  display_name: Upload file to OneDrive / SharePoint
+  description: 'Uploads an artifact into a folder (default the library root): up to 4 MB in one PUT, larger
+    files through an upload session. conflict_behavior fail (default), rename or replace. Never repeated
+    automatically: an unconfirmed result is timeout_unknown. With fail or replace the target is read back
+    and accepted only with the artifact''s size and hash; with rename an unconfirmed result is always
+    timeout_unknown.'
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: artifact_handle
+    value_type: artifact_handle
+    required: true
+  - *id013
+  - *id014
+  - name: filename
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - name: conflict_behavior
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - fail
+      - rename
+      - replace
+      default: fail
+  input_mapping_rules:
+  - *id017
+  outputs:
+  - &id020
+    name: item_id
+    value_type: text
+  - &id021
+    name: drive_id
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: name
+    value_type: text
+  - name: path
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: size
+    value_type: integer
+  - name: mime_type
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: web_url
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: quick_xor_hash
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: sha256
+    value_type: text
+  - name: conflict_behavior
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - fail
+      - rename
+      - replace
+  - name: confirmed_after_timeout
+    value_type: boolean
+  - name: changed
+    value_type: boolean
+  result_fields:
+  - result.item_id
+  - result.drive_id
+  - result.name
+  - result.path
+  - result.size
+  - result.mime_type
+  - result.web_url
+  - result.quick_xor_hash
+  - result.sha256
+  - result.conflict_behavior
+  - result.confirmed_after_timeout
+  - result.changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - name_conflict
+  - file_too_large
+  - artifact_input_unavailable
+  - egress_host_not_allowed
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: create_folder
+  display_name: Create OneDrive / SharePoint folder
+  description: 'Creates a folder inside a parent folder (default the library root). Idempotent: an existing
+    folder with the same name is success with changed false; an existing file with that name is name_conflict.'
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: parent_folder_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 256
+  - name: parent_folder_path
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 400
+  - name: name
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  input_mapping_rules:
+  - schema:
+      type: object
+      not:
+        required:
+        - parent_folder_id
+        - parent_folder_path
+    error:
+      code: invalid_payload
+      message: Map a parent folder ID or a parent folder path
+      not both.: null
+      field: parent_folder_id
+  outputs:
+  - *id020
+  - *id021
+  - name: name
+    value_type: text
+  - name: path
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: web_url
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: changed
+    value_type: boolean
+  result_fields:
+  - result.item_id
+  - result.drive_id
+  - result.name
+  - result.path
+  - result.web_url
+  - result.changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - name_conflict
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: create_share_link
+  display_name: Create OneDrive / SharePoint sharing link
+  description: Creates a view or edit sharing link for an item. Scope organization (default) or anonymous
+    when the tenant allows it. Graph returns an existing link of the same type and scope (changed false).
+    Never repeated automatically.
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id022
+  - *id023
+  - name: link_type
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - view
+      - edit
+      default: view
+  - name: scope
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - organization
+      - anonymous
+      default: organization
+  input_mapping_rules:
+  - *id024
+  outputs:
+  - name: permission_id
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: link_url
+    value_type: text
+  - name: link_type
+    value_type: text
+  - name: scope
+    value_type: text
+  - name: changed
+    value_type: boolean
+  result_fields:
+  - result.permission_id
+  - result.link_url
+  - result.link_type
+  - result.scope
+  - result.changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - item_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: list_site_libraries
+  display_name: List SharePoint site libraries
+  description: Resolves a SharePoint site URL (GET /sites/{hostname}:/{path}) and lists every document
+    library of the site with its drive ID. Without site_url it uses the connection's site. A site with
+    several libraries needs an explicit choice; there is no implicit default.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids:
+  - m365_files_user
+  - m365_files_app
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: site_url
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 2048
+  outputs:
+  - name: site_id
+    value_type: text
+  - name: site_name
+    value_type: text
+  - name: site_web_url
+    value_type: text
+  - name: libraries
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - drive_id
+        - name
+        - drive_type
+        - web_url
+        - description
+        properties:
+          drive_id:
+            type: string
+          name:
+            type: string
+          drive_type:
+            type: string
+          web_url:
+            type: string
+          description:
+            type: string
+  - name: total
+    value_type: integer
+  result_fields:
+  - result.site_id
+  - result.site_name
+  - result.site_web_url
+  - result.libraries
+  - result.total
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: find_workbooks
+  display_name: Find Excel workbooks
+  description: Search the signed-in user's OneDrive for Business and SharePoint sites for .xlsx workbooks
+    by name with the Microsoft Search API.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids:
+  - m365_excel_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: name
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - name: limit
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 25
+      default: 25
+  - name: cursor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 512
+  outputs:
+  - name: workbooks
+    value_type: array
+    schema:
+      type: array
+      maxItems: 25
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - drive_id
+        - drive_item_id
+        - name
+        - site
+        - site_url
+        - library
+        - web_url
+        - workbook
+        properties:
+          drive_id:
+            type: string
+          drive_item_id:
+            type: string
+          name:
+            type: string
+          site:
+            type: string
+          site_url:
+            type: string
+          library:
+            type: string
+          web_url:
+            type: string
+          workbook:
+            type: object
+            additionalProperties: false
+            required:
+            - drive_id
+            - drive_item_id
+            properties:
+              drive_id:
+                type: string
+              drive_item_id:
+                type: string
+  - name: next_cursor
+    value_type: text
+  - name: total
+    value_type: integer
+  result_fields:
+  - result.workbooks
+  - result.next_cursor
+  - result.total
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: list_workbook_objects
+  display_name: List Excel worksheets and tables
+  description: List the worksheets and tables of one workbook.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids:
+  - m365_excel_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - &id025
+    name: workbook
+    value_type: object
+    required: true
+    schema:
+      type: object
+      additionalProperties: false
+      description: Exactly one form, either drive_id + drive_item_id or sharing_link.
+      properties:
+        drive_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        drive_item_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        sharing_link:
+          type: string
+          minLength: 9
+          maxLength: 2048
+  outputs:
+  - &id026
+    name: workbook
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - drive_id
+      - drive_item_id
+      - name
+      - web_url
+      properties:
+        drive_id:
+          type: string
+        drive_item_id:
+          type: string
+        name:
+          type: string
+        web_url:
+          type: string
+  - name: worksheets
+    value_type: array
+    schema:
+      type: array
+      maxItems: 200
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - name
+        - position
+        - visibility
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          position:
+            type:
+            - integer
+            - 'null'
+          visibility:
+            type: string
+  - name: tables
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - name
+        - worksheet
+        - show_headers
+        - show_totals
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          worksheet:
+            type: string
+          show_headers:
+            type: boolean
+          show_totals:
+            type: boolean
+  - name: truncated
+    value_type: boolean
+  result_fields:
+  - result.workbook
+  - result.worksheets
+  - result.tables
+  - result.truncated
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: read_range
+  display_name: Read Excel range
+  description: Read a worksheet range (an A1 address, or the used range) or a whole table into a bounded
+    NDJSON dataset.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids:
+  - m365_excel_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id025
+  - name: worksheet
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 31
+  - name: address
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 2
+      maxLength: 32
+  - name: table
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - name: header_mode
+    value_type: text
+    required: false
+    schema:
+      type: string
+      enum:
+      - first_row
+      - none
+      default: first_row
+  outputs:
+  - name: dataset_handle
+    value_type: dataset_handle
+  - name: row_count
+    value_type: integer
+  - name: column_count
+    value_type: integer
+  - name: schema
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - name
+        - type
+        - nullable
+        properties:
+          name:
+            type: string
+          type:
+            type: string
+            enum:
+            - string
+            - number
+            - boolean
+          nullable:
+            type: boolean
+            const: true
+  - name: preview
+    value_type: array
+    schema:
+      type: array
+      maxItems: 100
+  - *id026
+  - name: worksheet
+    value_type: text
+  - name: address
+    value_type: text
+  result_fields:
+  - result.dataset_handle
+  - result.row_count
+  - result.column_count
+  - result.schema
+  - result.preview
+  - result.workbook
+  - result.worksheet
+  - result.address
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - table_not_found
+  - range_invalid
+  - range_too_large
+  - dataset_output_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- operation_id: write_range
+  display_name: Write Excel range
+  description: Replace one worksheet range with dataset rows or inline values in a workbook session. An
+    unconfirmed write is never repeated.
+  operation_kind: action
+  category: spreadsheet
+  connection_type_ids:
+  - m365_excel_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id025
+  - name: worksheet
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 31
+  - name: address
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 2
+      maxLength: 32
+  - name: dataset_handle
+    value_type: dataset_handle
+    required: false
+  - name: inline_rows
+    value_type: array
+    required: false
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 500
+      items:
+        type: array
+        minItems: 1
+        maxItems: 100
+        items:
+          type:
+          - string
+          - number
+          - boolean
+          - 'null'
+          maxLength: 32767
+  - name: include_header
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  - name: allow_formulas
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  outputs:
+  - *id026
+  - name: worksheet
+    value_type: text
+  - name: address
+    value_type: text
+  - name: row_count
+    value_type: integer
+  - name: column_count
+    value_type: integer
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - response
+      - reread
+  result_fields:
+  - result.workbook
+  - result.worksheet
+  - result.address
+  - result.row_count
+  - result.column_count
+  - result.confirmation
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - range_invalid
+  - range_too_large
+  - dataset_input_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- operation_id: append_table_rows
+  display_name: Append Excel table rows
+  description: Append up to 500 rows to a table in one request, in the table's column order, with an optional
+    dedupe column. An unconfirmed append is never repeated.
+  operation_kind: action
+  category: spreadsheet
+  connection_type_ids:
+  - m365_excel_user
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - *id025
+  - name: table
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - name: dataset_handle
+    value_type: dataset_handle
+    required: false
+  - name: inline_rows
+    value_type: array
+    required: false
+    schema:
+      type: array
+      minItems: 1
+      maxItems: 500
+      items:
+        type: object
+        minProperties: 1
+        maxProperties: 100
+        additionalProperties:
+          type:
+          - string
+          - number
+          - boolean
+          - 'null'
+          maxLength: 32767
+  - name: dedupe_column
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+  - name: allow_formulas
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+  outputs:
+  - *id026
+  - name: table
+    value_type: text
+  - name: row_count
+    value_type: integer
+  - name: appended_count
+    value_type: integer
+  - name: skipped_count
+    value_type: integer
+  - name: changed
+    value_type: boolean
+  - name: confirmation
+    value_type: text
+    schema:
+      type: string
+      enum:
+      - none
+      - response
+      - reread
+  - name: first_row_index
+    value_type: integer
+    schema:
+      type:
+      - integer
+      - 'null'
+  - name: rows
+    value_type: array
+    schema:
+      type: array
+      maxItems: 500
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - index
+        - key
+        - status
+        properties:
+          index:
+            type: integer
+          key:
+            type: string
+          status:
+            type: string
+            enum:
+            - appended
+            - skipped
+            - conflict
+            - not_written
+            - confirmed
+            - unknown
+          reason:
+            type: string
+  result_fields:
+  - result.workbook
+  - result.table
+  - result.row_count
+  - result.appended_count
+  - result.skipped_count
+  - result.changed
+  - result.confirmation
+  - result.first_row_index
+  - result.rows
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - table_not_found
+  - range_too_large
+  - dataset_input_unavailable
+  - dedupe_conflict
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error

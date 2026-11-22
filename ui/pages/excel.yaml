@@ -1,0 +1,22 @@
+page_id: excel
+title: Excel
+description: Connect a signed-in user for Excel workbooks in OneDrive for Business or SharePoint Online.
+components:
+  - component_id: excel_user_connections
+    type: connection_form
+    title: Excel accounts
+    description: A user signs in once. Workflows then read and write workbooks in the background; Flow Steward refreshes the access.
+    data:
+      oauth_provider_id: m365_oauth
+      connection_type: m365_excel_user
+      oauth_intent: excel_connect
+  - component_id: excel_notes
+    type: markdown
+    title: Choosing a workbook
+    body: |
+      There is no file picker in the workflow editor yet. A step takes the workbook in one of two ways:
+
+      1. **IDs**: `drive_id` and `drive_item_id`. Find them with the **Find Excel workbooks** action on this page, or map them from a *Find Excel workbooks* / *Upload file* step.
+      2. **Sharing link**: in Excel, *Share → Copy link*. The signed-in user must already have access to the workbook. An address-bar URL is not accepted.
+
+      Only `.xlsx` files in OneDrive for Business or a SharePoint Online library are supported.

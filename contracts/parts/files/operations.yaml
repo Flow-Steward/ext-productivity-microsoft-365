@@ -1,0 +1,239 @@
+# Fragment for contracts/operation_manifest.yaml (merged by the lead). Task B5.3, B4.4.
+# Every operation serves both files connection types. No required_oauth_scopes: an
+# app-only type has no OAuth scopes, and the files_connect intent requests the
+# delegated ones (B4.4). The connection test is test_files_connection because mail
+# already owns test_connection and operation ids are extension-wide.
+# list_site_libraries is also the connection-setup action of the Add library form.
+- operation_id: test_files_connection
+  display_name: Test OneDrive / SharePoint connection
+  description: Resolves the connection's drive (own OneDrive, a site's default library, a drive ID, or the app-only library) and returns its name, site and quota when available. App-only connections also check that the library belongs to the configured site.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+  outputs:
+    - {name: mode, value_type: text, schema: {type: string, enum: [user, app]}}
+    - {name: drive_id, value_type: text}
+    - {name: drive_name, value_type: text}
+    - {name: drive_type, value_type: text}
+    - {name: drive_web_url, value_type: text}
+    - name: quota
+      value_type: object
+      schema:
+        type: [object, "null"]
+        additionalProperties: false
+        properties:
+          total: {type: [integer, "null"]}
+          used: {type: [integer, "null"]}
+          remaining: {type: [integer, "null"]}
+          state: {type: [string, "null"]}
+    - {name: site_id, value_type: text, schema: {type: [string, "null"]}}
+    - {name: site_name, value_type: text, schema: {type: [string, "null"]}}
+    - {name: site_web_url, value_type: text, schema: {type: [string, "null"]}}
+  result_fields: [result.mode, result.drive_id, result.drive_name, result.drive_type, result.drive_web_url, result.quota, result.site_id, result.site_name, result.site_web_url]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, drive_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: list_drive_items
+  display_name: List OneDrive / SharePoint folder
+  description: Lists one folder, addressed by folder_id or folder_path (default the library root), one page at a time with an opaque cursor.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - &folder_id_input {name: folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
+    - &folder_path_input {name: folder_path, value_type: text, required: false, schema: {type: string, maxLength: 400}}
+    - &limit_input {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+    - &cursor_input {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 8192}}
+  input_mapping_rules:
+    - &one_folder_rule
+      schema:
+        type: object
+        not: {required: [folder_id, folder_path]}
+      error: {code: invalid_payload, message: Map a folder ID or a folder path, not both., field: folder_id}
+  outputs:
+    - &items_output
+      name: items
+      value_type: array
+      schema:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required: [item_id, name, drive_id, parent_id, path, is_folder, size, mime_type, modified_at, web_url, child_count, quick_xor_hash]
+          properties:
+            item_id: {type: string}
+            name: {type: string}
+            drive_id: {type: [string, "null"]}
+            parent_id: {type: [string, "null"]}
+            path: {type: [string, "null"]}
+            is_folder: {type: boolean}
+            size: {type: [integer, "null"]}
+            mime_type: {type: [string, "null"]}
+            modified_at: {type: [string, "null"]}
+            web_url: {type: [string, "null"]}
+            child_count: {type: [integer, "null"]}
+            quick_xor_hash: {type: [string, "null"]}
+    - &next_cursor_output {name: next_cursor, value_type: text, schema: {type: [string, "null"], maxLength: 8192}}
+  result_fields: [result.items, result.next_cursor]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, item_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: search_drive_files
+  display_name: Search OneDrive / SharePoint files
+  description: "Delegated connections: Graph drive search (recursive, names and content), optionally kept to one folder and filtered by file type. App-only connections: a case-insensitive name filter inside one folder, not recursive, because Sites.Selected grants no search. search_mode in the result says which ran."
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: query, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+    - *folder_id_input
+    - *folder_path_input
+    - name: file_types
+      value_type: array
+      required: false
+      schema: {type: array, minItems: 1, maxItems: 20, items: {type: string, minLength: 1, maxLength: 17}}
+    - *limit_input
+    - *cursor_input
+  input_mapping_rules:
+    - *one_folder_rule
+  outputs:
+    - *items_output
+    - *next_cursor_output
+    - {name: search_mode, value_type: text, schema: {type: string, enum: [drive_search, folder_name_filter]}}
+  result_fields: [result.items, result.next_cursor, result.search_mode]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, item_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: download_file
+  display_name: Download OneDrive / SharePoint file
+  description: Streams one file, addressed by item_id or item_path, into an artifact (limit FS_EXTENSION_ARTIFACT_MAX_BYTES, default 200 MB). The pre-authenticated download URL is used without the Graph token and never returned.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - &item_id_input {name: item_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
+    - &item_path_input {name: item_path, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 400}}
+  input_mapping_rules:
+    - &one_item_rule
+      schema:
+        type: object
+        oneOf: [{required: [item_id]}, {required: [item_path]}]
+      error: {code: invalid_payload, message: Map exactly one of item ID or item path., field: item_id}
+  outputs:
+    - {name: artifact_handle, value_type: artifact_handle}
+    - {name: filename, value_type: text}
+    - {name: mime_type, value_type: text}
+    - {name: size, value_type: integer}
+    - {name: sha256, value_type: text, schema: {type: [string, "null"]}}
+    - {name: item_id, value_type: text}
+    - {name: drive_id, value_type: text, schema: {type: [string, "null"]}}
+    - {name: modified_at, value_type: text, schema: {type: [string, "null"]}}
+    - {name: web_url, value_type: text, schema: {type: [string, "null"]}}
+  result_fields: [result.artifact_handle, result.filename, result.mime_type, result.size, result.sha256, result.item_id, result.drive_id, result.modified_at, result.web_url]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, item_not_found, file_too_large, artifact_output_unavailable, egress_host_not_allowed, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: upload_file
+  display_name: Upload file to OneDrive / SharePoint
+  description: "Uploads an artifact into a folder (default the library root): up to 4 MB in one PUT, larger files through an upload session. conflict_behavior fail (default), rename or replace. Never repeated automatically: an unconfirmed result is timeout_unknown. With fail or replace the target is read back and accepted only with the artifact's size and hash; with rename an unconfirmed result is always timeout_unknown."
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: artifact_handle, value_type: artifact_handle, required: true}
+    - *folder_id_input
+    - *folder_path_input
+    - {name: filename, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+    - {name: conflict_behavior, value_type: text, required: false, schema: {type: string, enum: [fail, rename, replace], default: fail}}
+  input_mapping_rules:
+    - *one_folder_rule
+  outputs:
+    - &file_item_id {name: item_id, value_type: text}
+    - &file_drive_id {name: drive_id, value_type: text, schema: {type: [string, "null"]}}
+    - {name: name, value_type: text}
+    - {name: path, value_type: text, schema: {type: [string, "null"]}}
+    - {name: size, value_type: integer}
+    - {name: mime_type, value_type: text, schema: {type: [string, "null"]}}
+    - {name: web_url, value_type: text, schema: {type: [string, "null"]}}
+    - {name: quick_xor_hash, value_type: text, schema: {type: [string, "null"]}}
+    - {name: sha256, value_type: text}
+    - {name: conflict_behavior, value_type: text, schema: {type: string, enum: [fail, rename, replace]}}
+    - {name: confirmed_after_timeout, value_type: boolean}
+    - {name: changed, value_type: boolean}
+  result_fields: [result.item_id, result.drive_id, result.name, result.path, result.size, result.mime_type, result.web_url, result.quick_xor_hash, result.sha256, result.conflict_behavior, result.confirmed_after_timeout, result.changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, name_conflict, file_too_large, artifact_input_unavailable, egress_host_not_allowed, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: create_folder
+  display_name: Create OneDrive / SharePoint folder
+  description: "Creates a folder inside a parent folder (default the library root). Idempotent: an existing folder with the same name is success with changed false; an existing file with that name is name_conflict."
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: parent_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
+    - {name: parent_folder_path, value_type: text, required: false, schema: {type: string, maxLength: 400}}
+    - {name: name, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+  input_mapping_rules:
+    - schema:
+        type: object
+        not: {required: [parent_folder_id, parent_folder_path]}
+      error: {code: invalid_payload, message: Map a parent folder ID or a parent folder path, not both., field: parent_folder_id}
+  outputs:
+    - *file_item_id
+    - *file_drive_id
+    - {name: name, value_type: text}
+    - {name: path, value_type: text, schema: {type: [string, "null"]}}
+    - {name: web_url, value_type: text, schema: {type: [string, "null"]}}
+    - {name: changed, value_type: boolean}
+  result_fields: [result.item_id, result.drive_id, result.name, result.path, result.web_url, result.changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, name_conflict, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: create_share_link
+  display_name: Create OneDrive / SharePoint sharing link
+  description: Creates a view or edit sharing link for an item. Scope organization (default) or anonymous when the tenant allows it. Graph returns an existing link of the same type and scope (changed false). Never repeated automatically.
+  operation_kind: action
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *item_id_input
+    - *item_path_input
+    - {name: link_type, value_type: text, required: false, schema: {type: string, enum: [view, edit], default: view}}
+    - {name: scope, value_type: text, required: false, schema: {type: string, enum: [organization, anonymous], default: organization}}
+  input_mapping_rules:
+    - *one_item_rule
+  outputs:
+    - {name: permission_id, value_type: text, schema: {type: [string, "null"]}}
+    - {name: link_url, value_type: text}
+    - {name: link_type, value_type: text}
+    - {name: scope, value_type: text}
+    - {name: changed, value_type: boolean}
+  result_fields: [result.permission_id, result.link_url, result.link_type, result.scope, result.changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, item_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: list_site_libraries
+  display_name: List SharePoint site libraries
+  description: Resolves a SharePoint site URL (GET /sites/{hostname}:/{path}) and lists every document library of the site with its drive ID. Without site_url it uses the connection's site. A site with several libraries needs an explicit choice; there is no implicit default.
+  operation_kind: source
+  category: file_transfer
+  connection_type_ids: [m365_files_user, m365_files_app]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: site_url, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 2048}}
+  outputs:
+    - {name: site_id, value_type: text}
+    - {name: site_name, value_type: text}
+    - {name: site_web_url, value_type: text}
+    - name: libraries
+      value_type: array
+      schema:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required: [drive_id, name, drive_type, web_url, description]
+          properties:
+            drive_id: {type: string}
+            name: {type: string}
+            drive_type: {type: string}
+            web_url: {type: string}
+            description: {type: string}
+    - {name: total, value_type: integer}
+  result_fields: [result.site_id, result.site_name, result.site_web_url, result.libraries, result.total]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]

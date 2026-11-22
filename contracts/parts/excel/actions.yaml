@@ -1,0 +1,52 @@
+# Fragment for ui/actions/actions.yaml (merged by the lead). Task B5.4.
+# find_workbooks is also the action of the Excel page (no picker in v0.1): the user
+# searches by name there and copies drive_id + drive_item_id into a step.
+- action_id: find_workbooks
+  title: Find Excel workbooks
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: name, type: string, required: true}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+  result_fields: [workbooks, next_cursor, total]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: list_workbook_objects
+  title: List Excel worksheets and tables
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: workbook, type: object, required: true}]
+  result_fields: [workbook, worksheets, tables, truncated]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: read_range
+  title: Read Excel range
+  required_scopes: [extension:invoke, artifact:write]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: workbook, type: object, required: true}, {name: worksheet, type: string, required: false}, {name: address, type: string, required: false}, {name: table, type: string, required: false}, {name: header_mode, type: string, required: false}]
+  result_fields: [dataset_handle, row_count, column_count, schema, preview, workbook, worksheet, address]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, table_not_found, range_invalid, range_too_large, dataset_output_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: write_range
+  title: Write Excel range
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: workbook, type: object, required: true}, {name: worksheet, type: string, required: true}, {name: address, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}, {name: include_header, type: boolean, required: false}, {name: allow_formulas, type: boolean, required: false}]
+  result_fields: [workbook, worksheet, address, row_count, column_count, confirmation, external_effect_status, definitely_no_external_effect]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, range_invalid, range_too_large, dataset_input_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: append_table_rows
+  title: Append Excel table rows
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: workbook, type: object, required: true}, {name: table, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}, {name: dedupe_column, type: string, required: false}, {name: allow_formulas, type: boolean, required: false}]
+  result_fields: [workbook, table, row_count, appended_count, skipped_count, changed, confirmation, first_row_index, rows, external_effect_status, definitely_no_external_effect]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, table_not_found, range_too_large, dataset_input_unavailable, dedupe_conflict, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]

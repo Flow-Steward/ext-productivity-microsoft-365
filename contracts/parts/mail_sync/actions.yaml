@@ -1,0 +1,115 @@
+# Fragment for ui/actions/actions.yaml (merged by the lead). Task B5.2, Core A1/A2/A6.
+# Exact Core expectations: docs/TRIGGER_CONTRACT.md.
+- action_id: poll_mailbox
+  workflow_visible: false
+  title: Check mailbox for new email
+  description: Run one budgeted sync step of the new-mail trigger for one Outlook mail
+    connection and emit one microsoft365.mail.message.received event per new email.
+  required_scopes:
+  - extension:invoke
+  # A2: Core calls this background action only for these connection types. It
+  # declares no action-level provider secrets: a delegated connection gets its
+  # refreshed OAuth token, an app-only connection its own client_secret.
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  handler:
+    mode: extension
+    config:
+      runtime_resources:
+        project_connection: true
+        provider_key: flowsteward.microsoft-365
+      host_mutations:
+      - project_connection_upsert
+  contract:
+    # The lock key includes the polled connection_id, so two workers never poll
+    # one mailbox at once; different mailboxes still poll in parallel.
+    serialization:
+      resource: mail_sync
+    background:
+      kind: connection_poll
+      # ingress_config.mail_poll_interval_seconds: default 60, minimum 30.
+      interval_field: mail_poll_interval_seconds
+      # ingress_config.mail_trigger_mode: off (default, A6) or polling.
+      mode_field: mail_trigger_mode
+      transport_policy: webhook_preferred
+  command_type: invoke_extension_action
+  mutates_platform: true
+  parameters: []
+  result_fields:
+  - message
+  - result.status
+  - result.phase
+  - result.pages
+  - result.processed_updates
+  - result.events_emitted
+  - result.caught_up
+  - result.sync_reset
+  - result.sync_started_at
+  - result.last_reset_at
+  - result.last_recovered_at
+  - result.error_code
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - folder_not_found
+  - sync_reset
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+  - operation_serialization_unavailable
+  - operation_serialization_busy
+- action_id: save_trigger_settings
+  workflow_visible: false
+  title: Save trigger settings
+  description: Switch the new-mail trigger of this mail connection on or off and set its
+    polling interval and folder. Switching it off, or changing the folder, starts a new
+    sync the next time it is switched on.
+  required_scopes:
+  - extension:invoke
+  # Applies to the selected mail connection (target.connection_id); its type is
+  # kept. See docs/TRIGGER_CONTRACT.md, "Settings save".
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  handler:
+    mode: platform
+    operation: project_connection_ingress_patch
+    config:
+      connection_type_ids:
+      - m365_mail_user
+      - m365_mail_app
+      fields:
+      - mail_trigger_mode
+      - mail_poll_interval_seconds
+      - mail_trigger_folder
+  command_type: invoke_extension_action
+  mutates_platform: true
+  parameters:
+  - name: mail_trigger_mode
+    type: string
+    required: false
+  - name: mail_poll_interval_seconds
+    type: integer
+    required: false
+  - name: mail_trigger_folder
+    type: string
+    required: false
+  result_fields:
+  - message
+  - values.mail_trigger_mode
+  - values.mail_poll_interval_seconds
+  - values.mail_trigger_folder
+  error_codes:
+  - invalid_payload
+  - project_context_required
+  - project_connection_storage_unavailable

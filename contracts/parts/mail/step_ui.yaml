@@ -1,0 +1,74 @@
+# Fragment for contracts/step_ui_manifest.yaml (merged by the lead). Task B5.1.
+# No resource_picker in v0.1 (DEV_NOTES): folders are typed as a well-known name or
+# a folder id. The mail_folders_user / mail_folders_app queries list both.
+- {operation_id: test_connection, title: Test Outlook connection, fields: []}
+- {operation_id: list_mail_folders, title: List Outlook folders, fields: []}
+- operation_id: search_messages
+  title: Search Outlook messages
+  fields:
+    - &folder_field {name: folder, widget_type: text, label: Folder, help_text: "A well-known name (inbox, archive, sentitems, drafts, deleteditems, junkemail) or a folder ID from List Outlook folders. Default: inbox."}
+    - {name: from, widget_type: text, label: From address}
+    - {name: subject_contains, widget_type: text, label: Subject contains}
+    - {name: unread, widget_type: boolean, label: Unread only, help_text: On for unread messages only, off for read messages only; leave unset for both.}
+    - {name: has_attachments, widget_type: boolean, label: With attachments, help_text: On for messages with attachments, off for messages without; leave unset for both.}
+    - {name: received_after, widget_type: datetime, label: Received after}
+    - {name: received_before, widget_type: datetime, label: Received before}
+    - {name: query, widget_type: text, label: Free-text search, help_text: Searches subject, body and people. Cannot be combined with the filters above.}
+    - {name: limit, widget_type: number, label: Limit, help_text: 1 to 100. Default 25.}
+    - {name: cursor, widget_type: text, label: Cursor, help_text: Map only a next_cursor returned by this operation with the same filters.}
+- operation_id: get_message
+  title: Get Outlook message
+  fields:
+    - &message_id_field {name: message_id, widget_type: text, label: Message ID (required), required: true, help_text: Map the message_id of a trigger event or a search result.}
+    - {name: include_body, widget_type: boolean, label: Include text body}
+    - {name: include_headers, widget_type: boolean, label: Include internet headers}
+    - {name: include_attachment_metadata, widget_type: boolean, label: Include attachment list}
+    - {name: include_raw_html, widget_type: boolean, label: Include raw HTML body}
+- operation_id: get_attachment
+  title: Get Outlook attachment
+  fields:
+    - *message_id_field
+    - {name: attachment_id, widget_type: text, label: Attachment ID (required), required: true, help_text: Map an attachment_id from Get Outlook message.}
+- operation_id: send_message
+  title: Send Outlook email
+  fields:
+    - &to_field {name: to, widget_type: json, label: To, help_text: 'A list of addresses, or {"address": ..., "name": ...} objects.'}
+    - &cc_field {name: cc, widget_type: json, label: Cc}
+    - &bcc_field {name: bcc, widget_type: json, label: Bcc}
+    - {name: reply_to, widget_type: json, label: Reply-To}
+    - {name: subject, widget_type: text, label: Subject}
+    - {name: body_text, widget_type: text, label: Text body}
+    - {name: body_html, widget_type: text, label: HTML body}
+    - {name: importance, widget_type: select, label: Importance, options: [{label: Low, value: low}, {label: Normal, value: normal}, {label: High, value: high}]}
+    - &attachments_field {name: attachments, widget_type: json, label: Attachments, help_text: 'Artifact handles, or {"artifact_handle": ..., "filename": ..., "content_type": ...} objects. Give this step a retry policy (at least one retry).'}
+- operation_id: reply_message
+  title: Reply to Outlook email
+  fields:
+    - {name: message_id, widget_type: text, label: Original message ID (required), required: true}
+    - {name: reply_all, widget_type: boolean, label: Reply to all}
+    - &comment_field {name: comment, widget_type: text, label: Comment, help_text: Placed above the quoted original message.}
+    - *attachments_field
+- operation_id: forward_message
+  title: Forward Outlook email
+  fields:
+    - {name: message_id, widget_type: text, label: Original message ID (required), required: true}
+    - {name: to, widget_type: json, label: To (required), required: true, help_text: 'A list of addresses, or {"address": ..., "name": ...} objects.'}
+    - *cc_field
+    - *bcc_field
+    - *comment_field
+    - *attachments_field
+- operation_id: set_message_flags
+  title: Set Outlook message flags
+  fields:
+    - &message_ids_field {name: message_ids, widget_type: json, label: Message IDs (required), required: true, help_text: A list of 1 to 100 message IDs.}
+    - {name: is_read, widget_type: boolean, label: Mark as read, help_text: On marks read, off marks unread; leave unset to keep the read state.}
+    - {name: flag_status, widget_type: select, label: Follow-up flag, options: [{label: Flagged, value: flagged}, {label: Complete, value: complete}, {label: Not flagged, value: notFlagged}]}
+- operation_id: move_messages
+  title: Move Outlook messages
+  fields:
+    - *message_ids_field
+    - {name: destination_folder, widget_type: text, label: Destination folder (required), required: true, help_text: A well-known name (for example archive) or a folder ID from List Outlook folders.}
+- operation_id: delete_messages
+  title: Move Outlook messages to Deleted Items
+  fields:
+    - *message_ids_field

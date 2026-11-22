@@ -1,0 +1,23 @@
+# Fragment for the external_effects of extension.yaml (merged by the lead). Task B5.1.
+# check_mail_access is not here: it is a setup action that never sends mail and
+# removes its probe draft at once (B4.3).
+- operation_id: send_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [to, cc, bcc], target_kind: recipient, target_label: recipient}
+- operation_id: reply_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: forward_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+  observability: {target_fields: [to, cc, bcc], target_kind: recipient, target_label: recipient}
+- {operation_id: set_message_flags, effect_kind: mailbox_message_update, channel: microsoft_outlook, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: move_messages, effect_kind: mailbox_message_move, channel: microsoft_outlook, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: delete_messages, effect_kind: mailbox_message_trash, channel: microsoft_outlook, idempotency: required, test_mode_behavior: suppress}

@@ -1,0 +1,4 @@
+# Fragment for the external_effects of extension.yaml (merged by the lead). Task B5.3.
+- {operation_id: upload_file, effect_kind: drive_file_create, channel: microsoft_files, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: create_folder, effect_kind: drive_folder_create, channel: microsoft_files, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: create_share_link, effect_kind: drive_share_link_create, channel: microsoft_files, idempotency: required, test_mode_behavior: suppress}

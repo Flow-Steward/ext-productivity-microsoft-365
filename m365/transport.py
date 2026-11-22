@@ -25,7 +25,7 @@ GRAPH_BASE = f"https://{GRAPH_HOST}/v1.0"
 LOGIN_HOST = "login.microsoftonline.com"
 #: Hosts of pre-authenticated transfer URLs Graph hands out (task B6).
 TRANSFER_HOST_SUFFIXES = (".sharepoint.com",)
-TRANSFER_HOSTS = frozenset({"outlook.office.com"})
+TRANSFER_HOSTS = frozenset({"outlook.office.com", "outlook.office365.com"})
 CHUNK_BYTES = 64 * 1024
 ERROR_RESPONSE_LIMIT = 64 * 1024
 DEFAULT_RESPONSE_LIMIT = 4 * 1024 * 1024
@@ -50,7 +50,9 @@ class GraphResponse:
         try:
             value = json.loads(self.body.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise M365Error("provider_unavailable", "Microsoft Graph returned invalid JSON") from exc
+            raise M365Error(
+                "provider_unavailable", "Microsoft Graph returned invalid JSON"
+            ) from exc
         if not isinstance(value, dict):
             raise M365Error("provider_unavailable", "Microsoft Graph returned an invalid response")
         return value
@@ -92,8 +94,13 @@ class GraphTransport:
         purpose: str,
     ) -> dict[str, Any]:
         return self.request(
-            "GET", path, query=query, headers=headers, response_limit=response_limit,
-            retry="read", purpose=purpose,
+            "GET",
+            path,
+            query=query,
+            headers=headers,
+            response_limit=response_limit,
+            retry="read",
+            purpose=purpose,
         ).json()
 
     def request(
@@ -218,7 +225,9 @@ class GraphTransport:
                 ambiguous=ambiguous,
             ) from exc
         if status not in ok_statuses:
-            raise map_http_error(status, body[:ERROR_RESPONSE_LIMIT], method=method, retry_after=None)
+            raise map_http_error(
+                status, body[:ERROR_RESPONSE_LIMIT], method=method, retry_after=None
+            )
         return GraphResponse(status=status, headers=headers, body=body)
 
     def _retry_wait(self, exc: M365Error, *, retry: str, attempt: int) -> float | None:
@@ -228,7 +237,7 @@ class GraphTransport:
             return None
         wait = exc.retry_after_seconds
         if wait is None:
-            wait = min(2.0 ** attempt, MAX_RETRY_WAIT_SECONDS)
+            wait = min(2.0**attempt, MAX_RETRY_WAIT_SECONDS)
         wait = min(float(wait), MAX_RETRY_WAIT_SECONDS)
         if wait >= self.remaining_seconds() - 1.0:
             return None
@@ -250,7 +259,9 @@ def read_bounded(response: Any, limit: int) -> bytes:
             break
         buffer.extend(chunk)
         if len(buffer) > limit:
-            raise M365Error("response_too_large", "The Microsoft 365 response exceeds its safe limit")
+            raise M365Error(
+                "response_too_large", "The Microsoft 365 response exceeds its safe limit"
+            )
     return bytes(buffer)
 
 
@@ -281,7 +292,10 @@ def graph_error_code(body: bytes) -> tuple[str, str]:
     return str(error.get("code") or ""), inner_code
 
 
-_MAILBOX_CODES = frozenset({"ErrorInvalidUser", "MailboxNotEnabledForRESTAPI", "MailboxNotHostedInExchangeOnline", "ResourceNotFound"})
+#: Mailbox-specific codes only; the generic ``ResourceNotFound`` stays ``item_not_found``.
+_MAILBOX_CODES = frozenset(
+    {"ErrorInvalidUser", "MailboxNotEnabledForRESTAPI", "MailboxNotHostedInExchangeOnline"}
+)
 _RBAC_CODES = frozenset({"ErrorAccessDenied", "ErrorExchangeApplicationNotEnabled"})
 
 
@@ -292,16 +306,28 @@ def map_http_error(
     blob = f"{code} {inner}"
     ambiguous_write = method != "GET" and status in {500, 502, 503, 504}
     if "AADSTS50194" in blob:
-        return M365Error("tenant_not_multitenant", "Register the Entra app as multi-tenant", http_status=status)
+        return M365Error(
+            "tenant_not_multitenant", "Register the Entra app as multi-tenant", http_status=status
+        )
     if "AADSTS7000222" in blob:
-        return M365Error("client_secret_expired", "The app's client secret has expired", http_status=status)
+        return M365Error(
+            "client_secret_expired", "The app's client secret has expired", http_status=status
+        )
     if "AADSTS7000215" in blob or code == "invalid_client":
-        return M365Error("invalid_client", "The app's client ID or secret is not valid", http_status=status)
+        return M365Error(
+            "invalid_client", "The app's client ID or secret is not valid", http_status=status
+        )
     if status == 401 or code in {"invalid_grant", "InvalidAuthenticationToken"}:
-        return M365Error("authorization_required", "Microsoft 365 authorization is required", http_status=status)
+        return M365Error(
+            "authorization_required", "Microsoft 365 authorization is required", http_status=status
+        )
     if status == 403:
         if code in _RBAC_CODES:
-            return M365Error("mailbox_access_denied", "The app is not allowed to use this mailbox", http_status=status)
+            return M365Error(
+                "mailbox_access_denied",
+                "The app is not allowed to use this mailbox",
+                http_status=status,
+            )
         return M365Error(
             "permission_denied",
             "Microsoft 365 denied access; an administrator must grant the missing permission",
@@ -310,25 +336,50 @@ def map_http_error(
     if code in _MAILBOX_CODES and status in {400, 404}:
         return M365Error("mailbox_not_found", "The mailbox was not found", http_status=status)
     if status == 404:
-        return M365Error("item_not_found", "The requested Microsoft 365 item was not found", http_status=status)
+        return M365Error(
+            "item_not_found", "The requested Microsoft 365 item was not found", http_status=status
+        )
     if status == 409 or code == "nameAlreadyExists":
-        return M365Error("name_conflict", "An item with this name already exists", http_status=status)
+        return M365Error(
+            "name_conflict", "An item with this name already exists", http_status=status
+        )
     if status == 410 or code in {"SyncStateNotFound", "syncStateNotFound", "resyncRequired"}:
-        return M365Error("sync_reset", "The Graph sync state is no longer valid", http_status=status)
+        return M365Error(
+            "sync_reset", "The Graph sync state is no longer valid", http_status=status
+        )
     if status == 413:
-        return M365Error("file_too_large", "The content is too large for Microsoft 365", http_status=status)
+        return M365Error(
+            "file_too_large", "The content is too large for Microsoft 365", http_status=status
+        )
     if status == 429:
-        return M365Error("rate_limited", "Microsoft 365 is throttling requests", http_status=status, retry_after_seconds=retry_after)
+        return M365Error(
+            "rate_limited",
+            "Microsoft 365 is throttling requests",
+            http_status=status,
+            retry_after_seconds=retry_after,
+        )
     if status >= 500:
         if ambiguous_write:
             return M365Error(
-                "timeout_unknown", "Microsoft 365 did not confirm the write", http_status=status,
-                retry_after_seconds=retry_after, ambiguous=True,
+                "timeout_unknown",
+                "Microsoft 365 did not confirm the write",
+                http_status=status,
+                retry_after_seconds=retry_after,
+                ambiguous=True,
             )
-        return M365Error("provider_unavailable", "Microsoft 365 is unavailable", http_status=status, retry_after_seconds=retry_after)
+        return M365Error(
+            "provider_unavailable",
+            "Microsoft 365 is unavailable",
+            http_status=status,
+            retry_after_seconds=retry_after,
+        )
     if status == 400:
-        return M365Error("invalid_payload", "Microsoft 365 rejected the request", http_status=status)
-    return M365Error("provider_unavailable", "Microsoft 365 returned an unexpected status", http_status=status)
+        return M365Error(
+            "invalid_payload", "Microsoft 365 rejected the request", http_status=status
+        )
+    return M365Error(
+        "provider_unavailable", "Microsoft 365 returned an unexpected status", http_status=status
+    )
 
 
 __all__ = [

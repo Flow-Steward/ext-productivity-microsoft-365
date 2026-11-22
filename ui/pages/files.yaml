@@ -1,0 +1,21 @@
+page_id: files
+title: OneDrive and SharePoint
+description: Connect OneDrive or SharePoint libraries for this project.
+components:
+  - component_id: files_user_connections
+    type: connection_form
+    title: Drives of signed-in users
+    description: A user signs in with Microsoft. Leave Drive empty for their OneDrive, or enter a SharePoint site URL or a drive ID.
+    data:
+      oauth_provider_id: m365_oauth
+      connection_type: m365_files_user
+      oauth_intent: files_connect
+      test_action: test_files_connection
+  - ref: ../components/files_app_connection_form.yaml
+  - component_id: files_notes
+    type: markdown
+    title: Adding a SharePoint library with the organisation app
+    body: |
+      With `Sites.Selected` there is no site search. Save the connection with the site URL first, run **List site libraries**, then copy the library's drive ID into the connection. A site with several libraries always needs an explicit choice.
+
+      Search in an app-only library looks only inside one chosen folder.

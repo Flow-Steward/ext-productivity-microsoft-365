@@ -1,0 +1,7 @@
+# Fragment for contracts/artifact_policies.yaml (merged by the lead). Task B5.3.
+- operation_id: download_file
+  outputs:
+    - {kind: artifact, value_type: artifact_handle, binding_key: files_download_artifact, filename: m365-download.bin, content_type: application/octet-stream, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES, retention_class: run_window}
+- operation_id: upload_file
+  inputs:
+    - {kind: artifact, value_type: artifact_handle, binding_key: files_upload_artifact, from_input: artifact_handle, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES}

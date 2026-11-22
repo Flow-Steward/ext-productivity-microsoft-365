@@ -1,0 +1,435 @@
+forms:
+- operation_id: test_connection
+  title: Test Outlook connection
+  fields: []
+- operation_id: list_mail_folders
+  title: List Outlook folders
+  fields: []
+- operation_id: search_messages
+  title: Search Outlook messages
+  fields:
+  - name: folder
+    widget_type: text
+    label: Folder
+    help_text: 'A well-known name (inbox, archive, sentitems, drafts, deleteditems, junkemail) or a folder
+      ID from List Outlook folders. Default: inbox.'
+  - name: from
+    widget_type: text
+    label: From address
+  - name: subject_contains
+    widget_type: text
+    label: Subject contains
+  - name: unread
+    widget_type: boolean
+    label: Unread only
+    help_text: On for unread messages only
+    off for read messages only; leave unset for both.: null
+  - name: has_attachments
+    widget_type: boolean
+    label: With attachments
+    help_text: On for messages with attachments
+    off for messages without; leave unset for both.: null
+  - name: received_after
+    widget_type: datetime
+    label: Received after
+  - name: received_before
+    widget_type: datetime
+    label: Received before
+  - name: query
+    widget_type: text
+    label: Free-text search
+    help_text: Searches subject
+    body and people. Cannot be combined with the filters above.: null
+  - name: limit
+    widget_type: number
+    label: Limit
+    help_text: 1 to 100. Default 25.
+  - name: cursor
+    widget_type: text
+    label: Cursor
+    help_text: Map only a next_cursor returned by this operation with the same filters.
+- operation_id: get_message
+  title: Get Outlook message
+  fields:
+  - &id001
+    name: message_id
+    widget_type: text
+    label: Message ID (required)
+    required: true
+    help_text: Map the message_id of a trigger event or a search result.
+  - name: include_body
+    widget_type: boolean
+    label: Include text body
+  - name: include_headers
+    widget_type: boolean
+    label: Include internet headers
+  - name: include_attachment_metadata
+    widget_type: boolean
+    label: Include attachment list
+  - name: include_raw_html
+    widget_type: boolean
+    label: Include raw HTML body
+- operation_id: get_attachment
+  title: Get Outlook attachment
+  fields:
+  - *id001
+  - name: attachment_id
+    widget_type: text
+    label: Attachment ID (required)
+    required: true
+    help_text: Map an attachment_id from Get Outlook message.
+- operation_id: send_message
+  title: Send Outlook email
+  fields:
+  - name: to
+    widget_type: json
+    label: To
+    help_text: 'A list of addresses, or {"address": ..., "name": ...} objects.'
+  - &id003
+    name: cc
+    widget_type: json
+    label: Cc
+  - &id004
+    name: bcc
+    widget_type: json
+    label: Bcc
+  - name: reply_to
+    widget_type: json
+    label: Reply-To
+  - name: subject
+    widget_type: text
+    label: Subject
+  - name: body_text
+    widget_type: text
+    label: Text body
+  - name: body_html
+    widget_type: text
+    label: HTML body
+  - name: importance
+    widget_type: select
+    label: Importance
+    options:
+    - label: Low
+      value: low
+    - label: Normal
+      value: normal
+    - label: High
+      value: high
+  - &id002
+    name: attachments
+    widget_type: json
+    label: Attachments
+    help_text: 'Artifact handles, or {"artifact_handle": ..., "filename": ..., "content_type": ...} objects.
+      Give this step a retry policy (at least one retry).'
+- operation_id: reply_message
+  title: Reply to Outlook email
+  fields:
+  - name: message_id
+    widget_type: text
+    label: Original message ID (required)
+    required: true
+  - name: reply_all
+    widget_type: boolean
+    label: Reply to all
+  - &id005
+    name: comment
+    widget_type: text
+    label: Comment
+    help_text: Placed above the quoted original message.
+  - *id002
+- operation_id: forward_message
+  title: Forward Outlook email
+  fields:
+  - name: message_id
+    widget_type: text
+    label: Original message ID (required)
+    required: true
+  - name: to
+    widget_type: json
+    label: To (required)
+    required: true
+    help_text: 'A list of addresses, or {"address": ..., "name": ...} objects.'
+  - *id003
+  - *id004
+  - *id005
+  - *id002
+- operation_id: set_message_flags
+  title: Set Outlook message flags
+  fields:
+  - &id006
+    name: message_ids
+    widget_type: json
+    label: Message IDs (required)
+    required: true
+    help_text: A list of 1 to 100 message IDs.
+  - name: is_read
+    widget_type: boolean
+    label: Mark as read
+    help_text: On marks read
+    off marks unread; leave unset to keep the read state.: null
+  - name: flag_status
+    widget_type: select
+    label: Follow-up flag
+    options:
+    - label: Flagged
+      value: flagged
+    - label: Complete
+      value: complete
+    - label: Not flagged
+      value: notFlagged
+- operation_id: move_messages
+  title: Move Outlook messages
+  fields:
+  - *id006
+  - name: destination_folder
+    widget_type: text
+    label: Destination folder (required)
+    required: true
+    help_text: A well-known name (for example archive) or a folder ID from List Outlook folders.
+- operation_id: delete_messages
+  title: Move Outlook messages to Deleted Items
+  fields:
+  - *id006
+- operation_id: test_files_connection
+  title: Test OneDrive / SharePoint connection
+  fields: []
+- operation_id: list_drive_items
+  title: List OneDrive / SharePoint folder
+  fields:
+  - &id007
+    name: folder_path
+    widget_type: text
+    label: Folder path
+    placeholder: /Invoices/2026
+    help_text: A path from the library root. Leave empty for the root, or use Folder ID instead.
+  - &id008
+    name: folder_id
+    widget_type: text
+    label: Folder ID
+    help_text: Map an item_id of an earlier step. Use either Folder path or Folder ID.
+  - &id009
+    name: limit
+    widget_type: number
+    label: Limit
+    help_text: 1 to 200. Default 50.
+  - &id010
+    name: cursor
+    widget_type: text
+    label: Cursor
+    help_text: Map only a next_cursor returned by this operation with the same inputs.
+- operation_id: search_drive_files
+  title: Search OneDrive / SharePoint files
+  fields:
+  - name: query
+    widget_type: text
+    label: Search text (required)
+    required: true
+    help_text: Delegated connections search names and content across the drive. App-only connections match
+      file names inside the chosen folder only, without subfolders.
+  - *id007
+  - *id008
+  - name: file_types
+    widget_type: json
+    label: File types
+    help_text: File extensions, for example ["pdf", "xlsx"].
+  - *id009
+  - *id010
+- operation_id: download_file
+  title: Download OneDrive / SharePoint file
+  fields:
+  - &id011
+    name: item_path
+    widget_type: text
+    label: File path
+    placeholder: /Invoices/2026/cmr-0042.pdf
+    help_text: A path from the library root. Use either File path or Item ID.
+  - &id012
+    name: item_id
+    widget_type: text
+    label: Item ID
+    help_text: Map an item_id of an earlier step. Use either File path or Item ID.
+- operation_id: upload_file
+  title: Upload file to OneDrive / SharePoint
+  fields:
+  - name: artifact_handle
+    widget_type: artifact_picker
+    label: Input artifact (required)
+    required: true
+  - name: filename
+    widget_type: text
+    label: File name (required)
+    required: true
+    help_text: 'A single name without " * : < > ? / \ | or two dots in a row.'
+  - *id007
+  - *id008
+  - name: conflict_behavior
+    widget_type: select
+    label: If the name exists
+    help_text: Fail (default) leaves the existing file untouched. Rename lets Microsoft 365 pick a new
+      name; after a timeout its result cannot be confirmed.
+    options:
+    - label: Fail
+      value: fail
+    - label: Rename
+      value: rename
+    - label: Replace
+      value: replace
+- operation_id: create_folder
+  title: Create OneDrive / SharePoint folder
+  fields:
+  - name: name
+    widget_type: text
+    label: Folder name (required)
+    required: true
+  - name: parent_folder_path
+    widget_type: text
+    label: Parent folder path
+    placeholder: /Invoices
+    help_text: Leave empty for the library root
+    or use Parent folder ID instead.: null
+  - name: parent_folder_id
+    widget_type: text
+    label: Parent folder ID
+    help_text: Map an item_id of an earlier step.
+- operation_id: create_share_link
+  title: Create OneDrive / SharePoint sharing link
+  fields:
+  - *id011
+  - *id012
+  - name: link_type
+    widget_type: select
+    label: Link type
+    options:
+    - label: View
+      value: view
+    - label: Edit
+      value: edit
+  - name: scope
+    widget_type: select
+    label: Who can use the link
+    help_text: Anyone links work only when the tenant allows them.
+    options:
+    - label: People in the organization
+      value: organization
+    - label: Anyone with the link
+      value: anonymous
+- operation_id: list_site_libraries
+  title: List SharePoint site libraries
+  fields:
+  - name: site_url
+    widget_type: text
+    label: Site URL
+    placeholder: https://contoso.sharepoint.com/sites/Finance
+    help_text: Leave empty to use the connection's site.
+- operation_id: find_workbooks
+  title: Find Excel workbooks
+  fields:
+  - name: name
+    widget_type: text
+    label: Workbook name (required)
+    required: true
+    help_text: Words of the file name; only .xlsx workbooks in OneDrive for Business and SharePoint are
+      returned.
+  - name: limit
+    widget_type: number
+    label: Maximum results
+    help_text: 1 to 25.
+  - name: cursor
+    widget_type: text
+    label: Cursor
+    help_text: The next_cursor of a previous search with the same name.
+- operation_id: list_workbook_objects
+  title: List Excel worksheets and tables
+  fields:
+  - &id013
+    name: workbook
+    widget_type: json
+    label: Workbook (required)
+    required: true
+    help_text: 'Either {"drive_id": "...", "drive_item_id": "..."} (from Find Excel workbooks on the Excel
+      page, or mapped from an earlier step) or {"sharing_link": "https://..."} from Share → Copy link.
+      The connected user must already have access to the workbook.'
+- operation_id: read_range
+  title: Read Excel range
+  fields:
+  - *id013
+  - name: worksheet
+    widget_type: text
+    label: Worksheet
+    help_text: Enter exactly one of Worksheet or Table.
+  - name: address
+    widget_type: text
+    label: A1 address
+    help_text: For example A1:D200. Leave empty to read the worksheet's used range. Only with Worksheet.
+  - name: table
+    widget_type: text
+    label: Table
+    help_text: Enter exactly one of Worksheet or Table.
+  - name: header_mode
+    widget_type: select
+    label: Header mode
+    options:
+    - label: First row
+      value: first_row
+    - label: No header
+      value: none
+- operation_id: write_range
+  title: Write Excel range
+  fields:
+  - *id013
+  - name: worksheet
+    widget_type: text
+    label: Worksheet (required)
+    required: true
+  - name: address
+    widget_type: text
+    label: A1 address (required)
+    required: true
+    help_text: A single cell anchors the values; a range such as A1:D20 is replaced as a whole and its
+      other cells are cleared.
+  - name: dataset_handle
+    widget_type: dataset_picker
+    label: Input dataset
+    help_text: Choose exactly one input dataset or inline rows.
+  - name: inline_rows
+    widget_type: json
+    label: Inline rows
+    help_text: 'Choose exactly one input dataset or inline rows: a list of value lists, at most 500 rows.'
+  - name: include_header
+    widget_type: boolean
+    label: Write dataset column names as the first row
+  - name: allow_formulas
+    widget_type: boolean
+    label: Allow formulas
+    help_text: Off by default. When off
+    text starting with = + - @ is stored as text: null
+    not run as a formula.: null
+- operation_id: append_table_rows
+  title: Append Excel table rows
+  fields:
+  - *id013
+  - name: table
+    widget_type: text
+    label: Table (required)
+    required: true
+  - name: dataset_handle
+    widget_type: dataset_picker
+    label: Input dataset
+    help_text: Choose exactly one input dataset or inline rows.
+  - name: inline_rows
+    widget_type: json
+    label: Inline rows
+    help_text: 'Choose exactly one input dataset or inline rows: a list of objects keyed by table column
+      names, at most 500 rows.'
+  - name: dedupe_column
+    widget_type: text
+    label: Dedupe column
+    help_text: Recommended for trigger-driven workflows. A key already present with equal values is skipped;
+      with different values the step fails with dedupe_conflict. Not safe against parallel runs of the
+      same table.
+  - name: allow_formulas
+    widget_type: boolean
+    label: Allow formulas
+    help_text: Off by default. When off
+    text starting with = + - @ is stored as text: null
+    not run as a formula.: null

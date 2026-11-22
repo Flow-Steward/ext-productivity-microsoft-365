@@ -1,0 +1,22 @@
+component_id: mail_app_connections
+type: connection_form
+title: Mailboxes of the organisation app
+description: Add a mailbox such as invoices@ or cmr@ by address. No person signs in. Restrict the app to these mailboxes in Exchange first (Setup guide, step 4).
+data:
+  connection_kind: extension
+  connection_type: m365_mail_app
+  config_fields: [tenant_id, client_id, mailbox, client_secret_expires_on, control_mailbox]
+  secret_fields: [client_secret]
+  required_secret_fields: [client_secret]
+  tags: [microsoft, outlook, email]
+  test_action: test_connection
+defaults:
+  display_name: Outlook mailbox
+fields:
+  - {path: display_name, label: Display name, widget: text}
+  - {path: mailbox, label: Mailbox address, widget: text, required: true, help: "For example cmr@company.com."}
+  - {path: tenant_id, label: Directory (tenant) ID, widget: text, required: true}
+  - {path: client_id, label: Application (client) ID, widget: text, required: true}
+  - {path: client_secret, label: Client secret, widget: secret, required: true, help: "Stored encrypted and never shown again."}
+  - {path: client_secret_expires_on, label: Client secret expires on, widget: text, help: "Optional, YYYY-MM-DD. Used for an expiry warning."}
+  - {path: control_mailbox, label: Control mailbox, widget: text, help: "Optional. A mailbox this app must NOT reach. Check read/write access uses it."}

@@ -1,0 +1,193 @@
+# Fragment for contracts/operation_manifest.yaml (merged by the lead). Task B5.4.
+# Excel is delegated only: every operation serves m365_excel_user. No
+# required_oauth_scopes; the excel_connect intent requests the scopes (B4.4).
+- operation_id: find_workbooks
+  display_name: Find Excel workbooks
+  description: Search the signed-in user's OneDrive for Business and SharePoint sites for .xlsx workbooks by name with the Microsoft Search API.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids: [m365_excel_user]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - {name: name, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+    - {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 25, default: 25}}
+    - {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+  outputs:
+    - name: workbooks
+      value_type: array
+      schema:
+        type: array
+        maxItems: 25
+        items:
+          type: object
+          additionalProperties: false
+          required: [drive_id, drive_item_id, name, site, site_url, library, web_url, workbook]
+          properties:
+            drive_id: {type: string}
+            drive_item_id: {type: string}
+            name: {type: string}
+            site: {type: string}
+            site_url: {type: string}
+            library: {type: string}
+            web_url: {type: string}
+            workbook:
+              type: object
+              additionalProperties: false
+              required: [drive_id, drive_item_id]
+              properties: {drive_id: {type: string}, drive_item_id: {type: string}}
+    - {name: next_cursor, value_type: text}
+    - {name: total, value_type: integer}
+  result_fields: [result.workbooks, result.next_cursor, result.total]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: list_workbook_objects
+  display_name: List Excel worksheets and tables
+  description: List the worksheets and tables of one workbook.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids: [m365_excel_user]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - &workbook_input
+      name: workbook
+      value_type: object
+      required: true
+      schema:
+        type: object
+        additionalProperties: false
+        description: Exactly one form, either drive_id + drive_item_id or sharing_link.
+        properties:
+          drive_id: {type: string, minLength: 1, maxLength: 512}
+          drive_item_id: {type: string, minLength: 1, maxLength: 512}
+          sharing_link: {type: string, minLength: 9, maxLength: 2048}
+  outputs:
+    - &workbook_output
+      name: workbook
+      value_type: object
+      schema:
+        type: object
+        additionalProperties: false
+        required: [drive_id, drive_item_id, name, web_url]
+        properties: {drive_id: {type: string}, drive_item_id: {type: string}, name: {type: string}, web_url: {type: string}}
+    - name: worksheets
+      value_type: array
+      schema:
+        type: array
+        maxItems: 200
+        items:
+          type: object
+          additionalProperties: false
+          required: [id, name, position, visibility]
+          properties: {id: {type: string}, name: {type: string}, position: {type: [integer, "null"]}, visibility: {type: string}}
+    - name: tables
+      value_type: array
+      schema:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required: [id, name, worksheet, show_headers, show_totals]
+          properties: {id: {type: string}, name: {type: string}, worksheet: {type: string}, show_headers: {type: boolean}, show_totals: {type: boolean}}
+    - {name: truncated, value_type: boolean}
+  result_fields: [result.workbook, result.worksheets, result.tables, result.truncated]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: read_range
+  display_name: Read Excel range
+  description: Read a worksheet range (an A1 address, or the used range) or a whole table into a bounded NDJSON dataset.
+  operation_kind: source
+  category: spreadsheet
+  connection_type_ids: [m365_excel_user]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *workbook_input
+    - {name: worksheet, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 31}}
+    - {name: address, value_type: text, required: false, schema: {type: string, minLength: 2, maxLength: 32}}
+    - {name: table, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
+    - {name: header_mode, value_type: text, required: false, schema: {type: string, enum: [first_row, none], default: first_row}}
+  outputs:
+    - {name: dataset_handle, value_type: dataset_handle}
+    - {name: row_count, value_type: integer}
+    - {name: column_count, value_type: integer}
+    - name: schema
+      value_type: array
+      schema:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          required: [name, type, nullable]
+          properties: {name: {type: string}, type: {type: string, enum: [string, number, boolean]}, nullable: {type: boolean, const: true}}
+    - {name: preview, value_type: array, schema: {type: array, maxItems: 100}}
+    - *workbook_output
+    - {name: worksheet, value_type: text}
+    - {name: address, value_type: text}
+  result_fields: [result.dataset_handle, result.row_count, result.column_count, result.schema, result.preview, result.workbook, result.worksheet, result.address]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, table_not_found, range_invalid, range_too_large, dataset_output_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- operation_id: write_range
+  display_name: Write Excel range
+  description: Replace one worksheet range with dataset rows or inline values in a workbook session. An unconfirmed write is never repeated.
+  operation_kind: action
+  category: spreadsheet
+  connection_type_ids: [m365_excel_user]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *workbook_input
+    - {name: worksheet, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 31}}
+    - {name: address, value_type: text, required: true, schema: {type: string, minLength: 2, maxLength: 32}}
+    - {name: dataset_handle, value_type: dataset_handle, required: false}
+    - name: inline_rows
+      value_type: array
+      required: false
+      schema: {type: array, minItems: 1, maxItems: 500, items: {type: array, minItems: 1, maxItems: 100, items: {type: [string, number, boolean, "null"], maxLength: 32767}}}
+    - {name: include_header, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+    - {name: allow_formulas, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+  outputs:
+    - *workbook_output
+    - {name: worksheet, value_type: text}
+    - {name: address, value_type: text}
+    - {name: row_count, value_type: integer}
+    - {name: column_count, value_type: integer}
+    - {name: confirmation, value_type: text, schema: {type: string, enum: [response, reread]}}
+  result_fields: [result.workbook, result.worksheet, result.address, result.row_count, result.column_count, result.confirmation]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, worksheet_not_found, range_invalid, range_too_large, dataset_input_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- operation_id: append_table_rows
+  display_name: Append Excel table rows
+  description: Append up to 500 rows to a table in one request, in the table's column order, with an optional dedupe column. An unconfirmed append is never repeated.
+  operation_kind: action
+  category: spreadsheet
+  connection_type_ids: [m365_excel_user]
+  inputs:
+    - {name: connection_ref, value_type: connection_ref, required: true}
+    - *workbook_input
+    - {name: table, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+    - {name: dataset_handle, value_type: dataset_handle, required: false}
+    - name: inline_rows
+      value_type: array
+      required: false
+      schema: {type: array, minItems: 1, maxItems: 500, items: {type: object, minProperties: 1, maxProperties: 100, additionalProperties: {type: [string, number, boolean, "null"], maxLength: 32767}}}
+    - {name: dedupe_column, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
+    - {name: allow_formulas, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+  outputs:
+    - *workbook_output
+    - {name: table, value_type: text}
+    - {name: row_count, value_type: integer}
+    - {name: appended_count, value_type: integer}
+    - {name: skipped_count, value_type: integer}
+    - {name: changed, value_type: boolean}
+    - {name: confirmation, value_type: text, schema: {type: string, enum: [none, response, reread]}}
+    - {name: first_row_index, value_type: integer, schema: {type: [integer, "null"]}}
+    - name: rows
+      value_type: array
+      schema:
+        type: array
+        maxItems: 500
+        items:
+          type: object
+          additionalProperties: false
+          required: [index, key, status]
+          properties:
+            index: {type: integer}
+            key: {type: string}
+            status: {type: string, enum: [appended, skipped, conflict, not_written, confirmed, unknown]}
+            reason: {type: string}
+  result_fields: [result.workbook, result.table, result.row_count, result.appended_count, result.skipped_count, result.changed, result.confirmation, result.first_row_index, result.rows]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, workbook_not_found, workbook_unsupported, workbook_link_unsupported, table_not_found, range_too_large, dataset_input_unavailable, dedupe_conflict, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]

@@ -1,0 +1,44 @@
+# Fragment for extension.yaml workflow_triggers (merged by the lead). Task B5.2.
+- trigger_type_id: message_received
+  provider_key: flowsteward.microsoft-365
+  display_name: New Outlook email
+  description: Starts the workflow once for each new email in the trigger folder of one
+    Outlook mail connection, after the new-mail trigger is switched on for that
+    connection on the Mail page. The workflow receives the email's metadata (sender,
+    subject, received time, whether it has attachments and its immutable message_id);
+    it fetches the body and attachments itself. Mail received before the trigger was
+    switched on, while it was off, or moved or deleted before a poll saw it is not
+    delivered. One workflow watches one mailbox; for two mailboxes, create two
+    workflows.
+  event_name: microsoft365.mail.message.received
+  config_schema:
+    type: object
+    additionalProperties: false
+    required:
+    - connection_id
+    properties:
+      connection_id:
+        type: string
+        title: Mail connection
+        minLength: 1
+      from:
+        type: string
+        title: Sender address
+  ui_schema:
+    fields:
+    - name: connection_id
+      label: Mail connection
+      widget_type: text
+      required: true
+      help_text: The ID of the Outlook mail connection to watch, as shown on the Mail
+        page. One workflow watches one mailbox; to react to a second mailbox, create a
+        second workflow with its own trigger.
+    - name: from
+      label: Sender address
+      widget_type: text
+      required: false
+      placeholder: invoices@example.com
+      help_text: Start only for email from exactly this address, written in lower case.
+        Leave empty to start for every sender. Conditions such as "subject contains"
+        belong in a condition step of the workflow, because the trigger compares whole
+        values only.

@@ -1,0 +1,344 @@
+manifest_version: 2
+lifecycle:
+  data_schema_version: 1
+  data_migrations: []
+extension_id: flowsteward.microsoft-365
+kind: tool_provider
+version: 0.1.0
+display_name: Microsoft 365
+description: Outlook mail, OneDrive / SharePoint files and Excel workbooks for project workflows through
+  Microsoft Graph, with signed-in user and organisation-app connections.
+vendor:
+  name: Flow Steward
+  support_url: https://github.com/Flow-Steward/ext-productivity-microsoft-365/issues
+  website_url: https://github.com/Flow-Steward/ext-productivity-microsoft-365
+listing:
+  category: productivity
+  tags:
+  - microsoft
+  - outlook
+  - onedrive
+  - sharepoint
+  - excel
+  - email
+  - files
+  - spreadsheets
+  summary: Connect Outlook mailboxes, SharePoint libraries and Excel workbooks; start workflows on new
+    email.
+features:
+- tool
+- action
+required_scopes:
+- extension:invoke
+- artifact:read
+- artifact:write
+account_scope:
+  scope_type: project
+  description: Microsoft 365 connections, tokens and app secrets are scoped to each project.
+egress:
+  hosts:
+  - graph.microsoft.com
+  - login.microsoftonline.com
+  - '*.sharepoint.com'
+  - outlook.office.com
+  - outlook.office365.com
+supported_events:
+- microsoft365.mail.message.received
+workflow_triggers:
+- trigger_type_id: message_received
+  provider_key: flowsteward.microsoft-365
+  display_name: New Outlook email
+  description: Starts the workflow once for each new email in the trigger folder of one Outlook mail connection,
+    after the new-mail trigger is switched on for that connection on the Mail page. The workflow receives
+    the email's metadata (sender, subject, received time, whether it has attachments and its immutable
+    message_id); it fetches the body and attachments itself. Mail received before the trigger was switched
+    on, while it was off, or moved or deleted before a poll saw it is not delivered. One workflow watches
+    one mailbox; for two mailboxes, create two workflows.
+  event_name: microsoft365.mail.message.received
+  config_schema:
+    type: object
+    additionalProperties: false
+    required:
+    - connection_id
+    properties:
+      connection_id:
+        type: string
+        title: Mail connection
+        minLength: 1
+      from:
+        type: string
+        title: Sender address
+  ui_schema:
+    fields:
+    - name: connection_id
+      label: Mail connection
+      widget_type: text
+      required: true
+      help_text: The ID of the Outlook mail connection to watch, as shown on the Mail page. One workflow
+        watches one mailbox; to react to a second mailbox, create a second workflow with its own trigger.
+    - name: from
+      label: Sender address
+      widget_type: text
+      required: false
+      placeholder: invoices@example.com
+      help_text: Start only for email from exactly this address, written in lower case. Leave empty to
+        start for every sender. Conditions such as "subject contains" belong in a condition step of the
+        workflow, because the trigger compares whole values only.
+external_effects:
+- operation_id: send_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - to
+    - cc
+    - bcc
+    target_kind: recipient
+    target_label: recipient
+- operation_id: reply_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: forward_message
+  effect_kind: message_delivery
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+  observability:
+    target_fields:
+    - to
+    - cc
+    - bcc
+    target_kind: recipient
+    target_label: recipient
+- operation_id: set_message_flags
+  effect_kind: mailbox_message_update
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: move_messages
+  effect_kind: mailbox_message_move
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: delete_messages
+  effect_kind: mailbox_message_trash
+  channel: microsoft_outlook
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: upload_file
+  effect_kind: drive_file_create
+  channel: microsoft_files
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: create_folder
+  effect_kind: drive_folder_create
+  channel: microsoft_files
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: create_share_link
+  effect_kind: drive_share_link_create
+  channel: microsoft_files
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: write_range
+  effect_kind: spreadsheet_write
+  channel: microsoft_excel
+  idempotency: required
+  test_mode_behavior: suppress
+- operation_id: append_table_rows
+  effect_kind: spreadsheet_append
+  channel: microsoft_excel
+  idempotency: required
+  test_mode_behavior: suppress
+runtime_grants:
+  resources:
+    project_connection:
+      scope: owning_extension
+  mutations:
+    project_connection_upsert:
+      scope: owning_extension
+runtime:
+  contract_version: extension_host_v2
+  extension_contract_v2:
+    oauth_providers:
+    - provider_id: m365_oauth
+      display_name: Microsoft 365
+      description: Microsoft Entra app (multi-tenant) for signed-in user connections.
+      setup_page_id: setup-guide
+      help_page_id: setup-guide
+      error_help_anchors:
+        invalid_client: register-app
+        tenant_not_multitenant: register-app
+        authorization_required: authorize-again
+        permission_denied: delegated-permissions
+      flow:
+        type: authorization_code
+        pkce: s256
+      credential_fields:
+      - field_id: client_id
+        value_type: text
+        required: true
+        secret: false
+        browser_exposable: true
+        change_policy: reauthorization_required
+        label: Application (client) ID
+        help_text: The Application (client) ID of the multi-tenant app registration in Microsoft Entra
+          ID.
+        autocomplete: username
+        validation:
+          min_length: 36
+          max_length: 36
+      - field_id: client_secret
+        value_type: secret
+        required: true
+        secret: true
+        change_policy: runtime_revalidate
+        label: Client secret
+        help_text: A client secret of the same app registration. Note its expiry date.
+        autocomplete: current-password
+        validation:
+          min_length: 1
+          max_length: 4096
+      authorization_endpoint:
+        url: https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize
+      token_endpoint:
+        url: https://login.microsoftonline.com/organizations/oauth2/v2.0/token
+        client_auth_method: client_secret_post
+      callback_id: oauth_authorization
+      authorization_intents:
+      - intent_id: mail_connect
+        static_parameters:
+          prompt: select_account
+        user_inputs:
+        - input_id: email_hint
+          parameter: login_hint
+          validation:
+            type: email
+            max_length: 320
+      - intent_id: files_connect
+        static_parameters:
+          prompt: select_account
+        user_inputs:
+        - input_id: email_hint
+          parameter: login_hint
+          validation:
+            type: email
+            max_length: 320
+      - intent_id: excel_connect
+        static_parameters:
+          prompt: select_account
+        user_inputs:
+        - input_id: email_hint
+          parameter: login_hint
+          validation:
+            type: email
+            max_length: 320
+      post_connect_action_id: verify_microsoft_identity
+    connection_types: contracts/connection_types.yaml
+    operation_manifest: contracts/operation_manifest.yaml
+    step_ui_manifest: contracts/step_ui_manifest.yaml
+    resource_query_manifest: contracts/resource_queries.yaml
+    artifact_policies: contracts/artifact_policies.yaml
+artifact_policies:
+- operation_id: get_attachment
+  outputs:
+  - kind: artifact
+    value_type: artifact_handle
+    binding_key: attachment_artifact_handle
+    filename: outlook-attachment.bin
+    content_type: application/octet-stream
+    max_size_bytes: 157286400
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+    retention_class: run_window
+- operation_id: send_message
+  inputs:
+  - &id001
+    kind: artifact
+    value_type: artifact_handle
+    binding_key: attachments
+    from_input: attachments
+    required: false
+    max_size_bytes: 157286400
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+- operation_id: reply_message
+  inputs:
+  - *id001
+- operation_id: forward_message
+  inputs:
+  - *id001
+- operation_id: download_file
+  outputs:
+  - kind: artifact
+    value_type: artifact_handle
+    binding_key: files_download_artifact
+    filename: m365-download.bin
+    content_type: application/octet-stream
+    max_size_bytes: 209715200
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+    retention_class: run_window
+- operation_id: upload_file
+  inputs:
+  - kind: artifact
+    value_type: artifact_handle
+    binding_key: files_upload_artifact
+    from_input: artifact_handle
+    max_size_bytes: 209715200
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+- operation_id: read_range
+  outputs:
+  - kind: dataset
+    value_type: dataset_handle
+    binding_key: excel_range_dataset
+    content_type: application/x-ndjson
+    max_size_bytes: 209715200
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+    retention_class: run_window
+- operation_id: write_range
+  inputs:
+  - kind: dataset
+    value_type: dataset_handle
+    binding_key: excel_input_dataset
+    from_input: dataset_handle
+    required: false
+    content_type: application/x-ndjson
+    max_size_bytes: 209715200
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+- operation_id: append_table_rows
+  inputs:
+  - kind: dataset
+    value_type: dataset_handle
+    binding_key: excel_input_dataset
+    from_input: dataset_handle
+    required: false
+    content_type: application/x-ndjson
+    max_size_bytes: 209715200
+    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
+entrypoint:
+  mode: subprocess
+  command:
+  - python3
+  - main.py
+  timeout_policy:
+    env: FS_EXTENSION_OPERATION_TIMEOUT_SECONDS
+    default_seconds: 300
+    minimum_seconds: 30
+    maximum_seconds: 3600
+    headroom_seconds: 30
+health:
+  command:
+  - python3
+  - health.py
+  timeout_seconds: 5
+ui_manifest: ui/ui_manifest.yaml
+action_manifest: ui/actions/actions.yaml
+callbacks:
+- callback_id: oauth_authorization
+  purpose: oauth_authorization
+  methods:
+  - GET
+  connection_scoped: false
+python_requirements: []

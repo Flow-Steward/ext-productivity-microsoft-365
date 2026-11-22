@@ -1,0 +1,10 @@
+# Fragment for the artifact_policies of extension.yaml (merged by the lead). Task B5.4.
+- operation_id: read_range
+  outputs:
+    - {kind: dataset, value_type: dataset_handle, binding_key: excel_range_dataset, content_type: application/x-ndjson, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES, retention_class: run_window}
+- operation_id: write_range
+  inputs:
+    - {kind: dataset, value_type: dataset_handle, binding_key: excel_input_dataset, from_input: dataset_handle, required: false, content_type: application/x-ndjson, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES}
+- operation_id: append_table_rows
+  inputs:
+    - {kind: dataset, value_type: dataset_handle, binding_key: excel_input_dataset, from_input: dataset_handle, required: false, content_type: application/x-ndjson, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES}

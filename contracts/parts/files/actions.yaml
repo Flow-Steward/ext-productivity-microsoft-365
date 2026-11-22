@@ -1,0 +1,85 @@
+# Fragment for ui/actions/actions.yaml (merged by the lead). Task B5.3, B7.
+# list_site_libraries is the connection-setup action of the Add library form
+# (app-only): the admin enters the site URL, the action resolves it and lists the
+# libraries, and the admin must pick one, stored as drive_id. It is connection-bound
+# like every action: tenant_id, client_id and client_secret come from the selected
+# connection, which may not have a drive_id yet.
+- action_id: test_files_connection
+  title: Test OneDrive / SharePoint connection
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}]
+  result_fields: [mode, drive_id, drive_name, drive_type, drive_web_url, quota, site_id, site_name, site_web_url]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, drive_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: list_drive_items
+  title: List OneDrive / SharePoint folder
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: folder_id, type: string, required: false}, {name: folder_path, type: string, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+  result_fields: [items, next_cursor]
+  error_codes: &files_list_errors [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, item_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: search_drive_files
+  title: Search OneDrive / SharePoint files
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: query, type: string, required: true}, {name: folder_id, type: string, required: false}, {name: folder_path, type: string, required: false}, {name: file_types, type: array, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+  result_fields: [items, next_cursor, search_mode]
+  error_codes: *files_list_errors
+- action_id: download_file
+  title: Download OneDrive / SharePoint file
+  required_scopes: [extension:invoke, artifact:write]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: item_id, type: string, required: false}, {name: item_path, type: string, required: false}]
+  result_fields: [artifact_handle, filename, mime_type, size, sha256, item_id, drive_id, modified_at, web_url]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, item_not_found, file_too_large, artifact_output_unavailable, egress_host_not_allowed, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: upload_file
+  title: Upload file to OneDrive / SharePoint
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: artifact_handle, type: artifact_handle, required: true}, {name: folder_id, type: string, required: false}, {name: folder_path, type: string, required: false}, {name: filename, type: string, required: true}, {name: conflict_behavior, type: string, required: false}]
+  result_fields: [item_id, drive_id, name, path, size, mime_type, web_url, quick_xor_hash, sha256, conflict_behavior, confirmed_after_timeout, changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, name_conflict, file_too_large, artifact_input_unavailable, egress_host_not_allowed, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: create_folder
+  title: Create OneDrive / SharePoint folder
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: parent_folder_id, type: string, required: false}, {name: parent_folder_path, type: string, required: false}, {name: name, type: string, required: true}]
+  result_fields: [item_id, drive_id, name, path, web_url, changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, folder_not_found, name_conflict, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: create_share_link
+  title: Create OneDrive / SharePoint sharing link
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: item_id, type: string, required: false}, {name: item_path, type: string, required: false}, {name: link_type, type: string, required: false}, {name: scope, type: string, required: false}]
+  result_fields: [permission_id, link_url, link_type, scope, changed]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, item_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: list_site_libraries
+  title: List SharePoint site libraries
+  description: Resolves a SharePoint site URL and lists its document libraries. The Add library form uses it so the admin picks the library (drive_id) explicitly.
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: site_url, type: string, required: false}]
+  result_fields: [site_id, site_name, site_web_url, libraries, total]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, invalid_client, client_secret_expired, tenant_not_multitenant, site_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]

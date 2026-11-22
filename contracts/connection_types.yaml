@@ -1,0 +1,108 @@
+connection_types:
+  - connection_type_id: m365_mail_user
+    display_name: Outlook mailbox (signed-in user)
+    description: A user signs in with Microsoft. Their own mailbox, or a shared mailbox they can access.
+    auth:
+      type: oauth2
+      provider_id: m365_oauth
+      scopes:
+        required: [openid, profile, email, offline_access, User.Read, Mail.ReadWrite, Mail.Send, Mail.ReadWrite.Shared, Mail.Send.Shared]
+        optional: []
+    config_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        mailbox: {type: string, maxLength: 320, description: Optional shared mailbox address the signed-in user can access.}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    ingress_schema:
+      type: object
+      properties:
+        mail_trigger_mode: {type: string, enum: ['off', polling], default: 'off'}
+        mail_poll_interval_seconds: {type: integer, minimum: 30, default: 60}
+        mail_trigger_folder: {type: string, default: inbox, maxLength: 512}
+        last_inbound_sync_at: {type: string}
+        mail_sync: {type: object}
+    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, poll_mailbox]
+  - connection_type_id: m365_mail_app
+    display_name: Outlook mailbox (organisation app)
+    description: The organisation's Entra app reads and sends for one mailbox, without a signed-in user.
+    config_schema:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, client_id, mailbox]
+      properties:
+        tenant_id: {type: string, maxLength: 256}
+        client_id: {type: string, maxLength: 64}
+        mailbox: {type: string, maxLength: 320}
+        client_secret_expires_on: {type: string, maxLength: 32}
+        control_mailbox: {type: string, maxLength: 320}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      required: [client_secret]
+      properties: {client_secret: {type: string}}
+    ingress_schema:
+      type: object
+      properties:
+        mail_trigger_mode: {type: string, enum: ['off', polling], default: 'off'}
+        mail_poll_interval_seconds: {type: integer, minimum: 30, default: 60}
+        mail_trigger_folder: {type: string, default: inbox, maxLength: 512}
+        last_inbound_sync_at: {type: string}
+        mail_sync: {type: object}
+    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, check_mail_access, poll_mailbox]
+  - connection_type_id: m365_files_user
+    display_name: OneDrive / SharePoint (signed-in user)
+    description: A user signs in with Microsoft. Their OneDrive or a SharePoint library they can access.
+    auth:
+      type: oauth2
+      provider_id: m365_oauth
+      scopes:
+        required: [openid, profile, email, offline_access, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
+        optional: []
+    config_schema:
+      type: object
+      additionalProperties: false
+      properties:
+        drive_target: {type: string, maxLength: 2048, description: Empty for the user's OneDrive, a SharePoint site URL, or a drive ID.}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [test_files_connection, list_site_libraries, list_drive_items, search_drive_files, download_file, upload_file, create_folder, create_share_link]
+  - connection_type_id: m365_files_app
+    display_name: SharePoint library (organisation app)
+    description: The organisation's Entra app works with one SharePoint library, without a signed-in user.
+    config_schema:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, client_id, site_url, drive_id]
+      properties:
+        tenant_id: {type: string, maxLength: 256}
+        client_id: {type: string, maxLength: 64}
+        site_url: {type: string, maxLength: 2048}
+        drive_id: {type: string, maxLength: 512}
+        client_secret_expires_on: {type: string, maxLength: 32}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      required: [client_secret]
+      properties: {client_secret: {type: string}}
+    capabilities: [test_files_connection, list_site_libraries, list_drive_items, search_drive_files, download_file, upload_file, create_folder, create_share_link]
+  - connection_type_id: m365_excel_user
+    display_name: Excel (signed-in user)
+    description: A user signs in once; workflows then read and write Excel workbooks in OneDrive for Business or SharePoint Online in the background.
+    auth:
+      type: oauth2
+      provider_id: m365_oauth
+      scopes:
+        required: [openid, profile, email, offline_access, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
+        optional: []
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [find_workbooks, list_workbook_objects, read_range, write_range, append_table_rows]

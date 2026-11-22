@@ -1,0 +1,4 @@
+# Fragment for extension.yaml supported_events (merged by the lead). Task A5/B5.2:
+# a tool_provider may not declare ingress_event, so the poll result carries the
+# events and Core accepts only event types listed here.
+- microsoft365.mail.message.received

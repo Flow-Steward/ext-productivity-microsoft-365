@@ -19,7 +19,13 @@ from flowsteward_extension_sdk import PinnedPeerError, open_pinned_url
 
 from .connection import ConnectionContext, valid_tenant
 from .errors import M365Error
-from .transport import ERROR_RESPONSE_LIMIT, LOGIN_HOST, GraphTransport, map_http_error, read_bounded
+from .transport import (
+    ERROR_RESPONSE_LIMIT,
+    LOGIN_HOST,
+    GraphTransport,
+    map_http_error,
+    read_bounded,
+)
 
 GRAPH_DEFAULT_SCOPE = "https://graph.microsoft.com/.default"
 TOKEN_RESPONSE_LIMIT = 64 * 1024
@@ -61,14 +67,20 @@ def app_token(context: ConnectionContext, *, opener: Opener = open_pinned_url) -
             mapped.code == "invalid_payload" and int(exc.code) in {400, 401}
         ):
             # A token-endpoint 400/401 without a recognised AADSTS code is a client problem.
-            raise M365Error("invalid_client", "Microsoft Entra rejected the app credentials", http_status=int(exc.code)) from exc
+            raise M365Error(
+                "invalid_client",
+                "Microsoft Entra rejected the app credentials",
+                http_status=int(exc.code),
+            ) from exc
         raise mapped from exc
     except (PinnedPeerError, TimeoutError, OSError) as exc:
         raise M365Error("network_failure", "Microsoft Entra could not be reached") from exc
     try:
         payload = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise M365Error("provider_unavailable", "Microsoft Entra returned an invalid token response") from exc
+        raise M365Error(
+            "provider_unavailable", "Microsoft Entra returned an invalid token response"
+        ) from exc
     token = payload.get("access_token") if isinstance(payload, dict) else None
     if not isinstance(token, str) or not token.strip():
         raise M365Error("provider_unavailable", "Microsoft Entra returned no access token")

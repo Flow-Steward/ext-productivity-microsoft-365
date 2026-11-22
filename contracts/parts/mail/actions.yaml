@@ -1,0 +1,126 @@
+# Fragment for ui/actions/actions.yaml (merged by the lead). Task B5.1, B4.3.
+- action_id: test_connection
+  title: Test Outlook connection
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}]
+  result_fields: [mailbox_address, display_name, auth_mode, inbox_total, inbox_unread]
+  error_codes: &mail_read_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: list_mail_folders
+  title: List Outlook folders
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}]
+  result_fields: [well_known, folders, truncated]
+  error_codes: *mail_read_errors
+- action_id: search_messages
+  title: Search Outlook messages
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: folder, type: string, required: false}, {name: from, type: string, required: false}, {name: subject_contains, type: string, required: false}, {name: unread, type: boolean, required: false}, {name: has_attachments, type: boolean, required: false}, {name: received_after, type: string, required: false}, {name: received_before, type: string, required: false}, {name: query, type: string, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+  result_fields: [messages, next_cursor, count]
+  error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, folder_not_found, search_unsupported, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: get_message
+  title: Get Outlook message
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: include_body, type: boolean, required: false}, {name: include_headers, type: boolean, required: false}, {name: include_attachment_metadata, type: boolean, required: false}, {name: include_raw_html, type: boolean, required: false}]
+  result_fields: [message]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: get_attachment
+  title: Get Outlook attachment
+  required_scopes: [extension:invoke, artifact:write]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: true
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: attachment_id, type: string, required: true}]
+  result_fields: [attachment_artifact_handle, attachment_metadata]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, attachment_not_found, attachment_type_unsupported, attachment_too_large, artifact_output_unavailable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+- action_id: send_message
+  title: Send Outlook email
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: to, type: array, required: false}, {name: cc, type: array, required: false}, {name: bcc, type: array, required: false}, {name: reply_to, type: array, required: false}, {name: subject, type: string, required: false}, {name: body_text, type: string, required: false}, {name: body_html, type: string, required: false}, {name: importance, type: string, required: false}, {name: attachments, type: array, required: false}]
+  result_fields: &send_result_fields [message_id, confirmation, attachment_count, external_effect_status, definitely_no_external_effect]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, artifact_input_unavailable, attachment_too_large, attachment_upload_failed, attachment_state_unknown, egress_host_not_allowed, file_too_large, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: reply_message
+  title: Reply to Outlook email
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: reply_all, type: boolean, required: false}, {name: comment, type: string, required: false}, {name: attachments, type: array, required: false}]
+  result_fields: *send_result_fields
+  error_codes: &reply_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, artifact_input_unavailable, attachment_too_large, attachment_upload_failed, attachment_state_unknown, egress_host_not_allowed, file_too_large, rate_limited, provider_unavailable, network_failure, response_too_large, timeout_unknown, internal_error]
+- action_id: forward_message
+  title: Forward Outlook email
+  required_scopes: [extension:invoke, artifact:read]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: to, type: array, required: true}, {name: cc, type: array, required: false}, {name: bcc, type: array, required: false}, {name: comment, type: string, required: false}, {name: attachments, type: array, required: false}]
+  result_fields: *send_result_fields
+  error_codes: *reply_errors
+- action_id: set_message_flags
+  title: Set Outlook message flags
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: is_read, type: boolean, required: false}, {name: flag_status, type: string, required: false}]
+  result_fields: &mutation_result_fields [results, changed_count, changed, external_effect_status, definitely_no_external_effect]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+- action_id: move_messages
+  title: Move Outlook messages
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: destination_folder, type: string, required: true}]
+  result_fields: *mutation_result_fields
+  error_codes: &move_errors [invalid_payload, invalid_connection, authorization_required, permission_denied, mailbox_not_found, mailbox_access_denied, invalid_client, client_secret_expired, tenant_not_multitenant, message_not_found, folder_not_found, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+- action_id: delete_messages
+  title: Move Outlook messages to Deleted Items
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}]
+  result_fields: *mutation_result_fields
+  error_codes: *move_errors
+# Mail page / Add mailbox form (B4.3, B7). App-only connections only. Real Graph calls:
+# a read of the control mailbox's Inbox and a probe draft there (deleted at once).
+# It never sends mail, so it says nothing about Mail.Send; the page must show `note`.
+- action_id: check_mail_access
+  title: Check read/write access
+  description: Checks with real Graph calls that this app cannot read or change a control mailbox outside its Exchange RBAC scope. Does not test send permission.
+  required_scopes: [extension:invoke]
+  handler: {mode: extension}
+  mutates_platform: false
+  workflow_visible: false
+  connection_type_ids: [m365_mail_app]
+  parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: control_mailbox, type: string, required: false}]
+  result_fields: [control_mailbox, verdict, broad_access, read, read_error_code, write, write_error_code, cleanup_failed, send_permission_tested, message, note]
+  error_codes: [invalid_payload, invalid_connection, authorization_required, invalid_client, client_secret_expired, tenant_not_multitenant, rate_limited, provider_unavailable, network_failure, internal_error]

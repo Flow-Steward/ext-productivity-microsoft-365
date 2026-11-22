@@ -1,0 +1,45 @@
+# Fragment for contracts/step_ui_manifest.yaml (merged by the lead). Task B5.4.
+# No picker in v0.1: the workbook is typed in or mapped from an earlier step, for
+# example the `workbook` object of a find_workbooks result.
+- operation_id: find_workbooks
+  title: Find Excel workbooks
+  fields:
+    - {name: name, widget_type: text, label: Workbook name (required), required: true, help_text: Words of the file name; only .xlsx workbooks in OneDrive for Business and SharePoint are returned.}
+    - {name: limit, widget_type: number, label: Maximum results, help_text: 1 to 25.}
+    - {name: cursor, widget_type: text, label: Cursor, help_text: The next_cursor of a previous search with the same name.}
+- operation_id: list_workbook_objects
+  title: List Excel worksheets and tables
+  fields:
+    - &workbook_field
+      name: workbook
+      widget_type: json
+      label: Workbook (required)
+      required: true
+      help_text: 'Either {"drive_id": "...", "drive_item_id": "..."} (from Find Excel workbooks on the Excel page, or mapped from an earlier step) or {"sharing_link": "https://..."} from Share → Copy link. The connected user must already have access to the workbook.'
+- operation_id: read_range
+  title: Read Excel range
+  fields:
+    - *workbook_field
+    - {name: worksheet, widget_type: text, label: Worksheet, help_text: Enter exactly one of Worksheet or Table.}
+    - {name: address, widget_type: text, label: A1 address, help_text: For example A1:D200. Leave empty to read the worksheet's used range. Only with Worksheet.}
+    - {name: table, widget_type: text, label: Table, help_text: Enter exactly one of Worksheet or Table.}
+    - {name: header_mode, widget_type: select, label: Header mode, options: [{label: First row, value: first_row}, {label: No header, value: none}]}
+- operation_id: write_range
+  title: Write Excel range
+  fields:
+    - *workbook_field
+    - {name: worksheet, widget_type: text, label: Worksheet (required), required: true}
+    - {name: address, widget_type: text, label: A1 address (required), required: true, help_text: A single cell anchors the values; a range such as A1:D20 is replaced as a whole and its other cells are cleared.}
+    - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
+    - {name: inline_rows, widget_type: json, label: Inline rows, help_text: 'Choose exactly one input dataset or inline rows: a list of value lists, at most 500 rows.'}
+    - {name: include_header, widget_type: boolean, label: Write dataset column names as the first row}
+    - {name: allow_formulas, widget_type: boolean, label: Allow formulas, help_text: Off by default. When off, text starting with = + - @ is stored as text, not run as a formula.}
+- operation_id: append_table_rows
+  title: Append Excel table rows
+  fields:
+    - *workbook_field
+    - {name: table, widget_type: text, label: Table (required), required: true}
+    - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
+    - {name: inline_rows, widget_type: json, label: Inline rows, help_text: 'Choose exactly one input dataset or inline rows: a list of objects keyed by table column names, at most 500 rows.'}
+    - {name: dedupe_column, widget_type: text, label: Dedupe column, help_text: Recommended for trigger-driven workflows. A key already present with equal values is skipped; with different values the step fails with dedupe_conflict. Not safe against parallel runs of the same table.}
+    - {name: allow_formulas, widget_type: boolean, label: Allow formulas, help_text: Off by default. When off, text starting with = + - @ is stored as text, not run as a formula.}

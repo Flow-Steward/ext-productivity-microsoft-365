@@ -1,0 +1,1235 @@
+actions:
+- action_id: verify_microsoft_identity
+  title: Verify Microsoft account identity
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  parameters: []
+  result_fields:
+  - subject
+  - verified_display_name
+  - verified_email
+  - safe_metadata
+  - health
+  error_codes:
+  - invalid_payload
+  - authorization_required
+  - provider_unavailable
+  - network_failure
+  - rate_limited
+- action_id: test_connection
+  title: Test Outlook connection
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - mailbox_address
+  - display_name
+  - auth_mode
+  - inbox_total
+  - inbox_unread
+  error_codes: &id001
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_mail_folders
+  title: List Outlook folders
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - well_known
+  - folders
+  - truncated
+  error_codes: *id001
+- action_id: search_messages
+  title: Search Outlook messages
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: folder
+    type: string
+    required: false
+  - name: from
+    type: string
+    required: false
+  - name: subject_contains
+    type: string
+    required: false
+  - name: unread
+    type: boolean
+    required: false
+  - name: has_attachments
+    type: boolean
+    required: false
+  - name: received_after
+    type: string
+    required: false
+  - name: received_before
+    type: string
+    required: false
+  - name: query
+    type: string
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - messages
+  - next_cursor
+  - count
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - folder_not_found
+  - search_unsupported
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: get_message
+  title: Get Outlook message
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_id
+    type: string
+    required: true
+  - name: include_body
+    type: boolean
+    required: false
+  - name: include_headers
+    type: boolean
+    required: false
+  - name: include_attachment_metadata
+    type: boolean
+    required: false
+  - name: include_raw_html
+    type: boolean
+    required: false
+  result_fields:
+  - message
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: get_attachment
+  title: Get Outlook attachment
+  required_scopes:
+  - extension:invoke
+  - artifact:write
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_id
+    type: string
+    required: true
+  - name: attachment_id
+    type: string
+    required: true
+  result_fields:
+  - attachment_artifact_handle
+  - attachment_metadata
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - attachment_not_found
+  - attachment_type_unsupported
+  - attachment_too_large
+  - artifact_output_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: send_message
+  title: Send Outlook email
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: to
+    type: array
+    required: false
+  - name: cc
+    type: array
+    required: false
+  - name: bcc
+    type: array
+    required: false
+  - name: reply_to
+    type: array
+    required: false
+  - name: subject
+    type: string
+    required: false
+  - name: body_text
+    type: string
+    required: false
+  - name: body_html
+    type: string
+    required: false
+  - name: importance
+    type: string
+    required: false
+  - name: attachments
+    type: array
+    required: false
+  result_fields: &id002
+  - message_id
+  - confirmation
+  - attachment_count
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - artifact_input_unavailable
+  - attachment_too_large
+  - attachment_upload_failed
+  - attachment_state_unknown
+  - egress_host_not_allowed
+  - file_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: reply_message
+  title: Reply to Outlook email
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_id
+    type: string
+    required: true
+  - name: reply_all
+    type: boolean
+    required: false
+  - name: comment
+    type: string
+    required: false
+  - name: attachments
+    type: array
+    required: false
+  result_fields: *id002
+  error_codes: &id003
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - artifact_input_unavailable
+  - attachment_too_large
+  - attachment_upload_failed
+  - attachment_state_unknown
+  - egress_host_not_allowed
+  - file_too_large
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: forward_message
+  title: Forward Outlook email
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_id
+    type: string
+    required: true
+  - name: to
+    type: array
+    required: true
+  - name: cc
+    type: array
+    required: false
+  - name: bcc
+    type: array
+    required: false
+  - name: comment
+    type: string
+    required: false
+  - name: attachments
+    type: array
+    required: false
+  result_fields: *id002
+  error_codes: *id003
+- action_id: set_message_flags
+  title: Set Outlook message flags
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_ids
+    type: array
+    required: true
+  - name: is_read
+    type: boolean
+    required: false
+  - name: flag_status
+    type: string
+    required: false
+  result_fields: &id004
+  - results
+  - changed_count
+  - changed
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - timeout_unknown
+  - internal_error
+- action_id: move_messages
+  title: Move Outlook messages
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_ids
+    type: array
+    required: true
+  - name: destination_folder
+    type: string
+    required: true
+  result_fields: *id004
+  error_codes: &id005
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - message_not_found
+  - folder_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - timeout_unknown
+  - internal_error
+- action_id: delete_messages
+  title: Move Outlook messages to Deleted Items
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: message_ids
+    type: array
+    required: true
+  result_fields: *id004
+  error_codes: *id005
+- action_id: check_mail_access
+  title: Check read/write access
+  description: Checks with real Graph calls that this app cannot read or change a control mailbox outside
+    its Exchange RBAC scope. Does not test send permission.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  connection_type_ids:
+  - m365_mail_app
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: control_mailbox
+    type: string
+    required: false
+  result_fields:
+  - control_mailbox
+  - verdict
+  - broad_access
+  - read
+  - read_error_code
+  - write
+  - write_error_code
+  - cleanup_failed
+  - send_permission_tested
+  - message
+  - note
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - internal_error
+- action_id: poll_mailbox
+  workflow_visible: false
+  title: Check mailbox for new email
+  description: Run one budgeted sync step of the new-mail trigger for one Outlook mail connection and
+    emit one microsoft365.mail.message.received event per new email.
+  required_scopes:
+  - extension:invoke
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  handler:
+    mode: extension
+    config:
+      runtime_resources:
+        project_connection: true
+        provider_key: flowsteward.microsoft-365
+      host_mutations:
+      - project_connection_upsert
+  contract:
+    serialization:
+      resource: mail_sync
+    background:
+      kind: connection_poll
+      interval_field: mail_poll_interval_seconds
+      mode_field: mail_trigger_mode
+      transport_policy: webhook_preferred
+  command_type: invoke_extension_action
+  mutates_platform: true
+  parameters: []
+  result_fields:
+  - message
+  - result.status
+  - result.phase
+  - result.pages
+  - result.processed_updates
+  - result.events_emitted
+  - result.caught_up
+  - result.sync_reset
+  - result.sync_started_at
+  - result.last_reset_at
+  - result.last_recovered_at
+  - result.error_code
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - mailbox_not_found
+  - mailbox_access_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - folder_not_found
+  - sync_reset
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+  - operation_serialization_unavailable
+  - operation_serialization_busy
+- action_id: save_trigger_settings
+  workflow_visible: false
+  title: Save trigger settings
+  description: Switch the new-mail trigger of this mail connection on or off and set its polling interval
+    and folder. Switching it off, or changing the folder, starts a new sync the next time it is switched
+    on.
+  required_scopes:
+  - extension:invoke
+  connection_type_ids:
+  - m365_mail_user
+  - m365_mail_app
+  handler:
+    mode: platform
+    operation: project_connection_ingress_patch
+    config:
+      connection_type_ids:
+      - m365_mail_user
+      - m365_mail_app
+      fields:
+      - mail_trigger_mode
+      - mail_poll_interval_seconds
+      - mail_trigger_folder
+  command_type: invoke_extension_action
+  mutates_platform: true
+  parameters:
+  - name: mail_trigger_mode
+    type: string
+    required: false
+  - name: mail_poll_interval_seconds
+    type: integer
+    required: false
+  - name: mail_trigger_folder
+    type: string
+    required: false
+  result_fields:
+  - message
+  - values.mail_trigger_mode
+  - values.mail_poll_interval_seconds
+  - values.mail_trigger_folder
+  error_codes:
+  - invalid_payload
+  - project_context_required
+  - project_connection_storage_unavailable
+- action_id: test_files_connection
+  title: Test OneDrive / SharePoint connection
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - mode
+  - drive_id
+  - drive_name
+  - drive_type
+  - drive_web_url
+  - quota
+  - site_id
+  - site_name
+  - site_web_url
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - drive_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_drive_items
+  title: List OneDrive / SharePoint folder
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: folder_id
+    type: string
+    required: false
+  - name: folder_path
+    type: string
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - items
+  - next_cursor
+  error_codes: &id006
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - item_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: search_drive_files
+  title: Search OneDrive / SharePoint files
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: query
+    type: string
+    required: true
+  - name: folder_id
+    type: string
+    required: false
+  - name: folder_path
+    type: string
+    required: false
+  - name: file_types
+    type: array
+    required: false
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - items
+  - next_cursor
+  - search_mode
+  error_codes: *id006
+- action_id: download_file
+  title: Download OneDrive / SharePoint file
+  required_scopes:
+  - extension:invoke
+  - artifact:write
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: item_id
+    type: string
+    required: false
+  - name: item_path
+    type: string
+    required: false
+  result_fields:
+  - artifact_handle
+  - filename
+  - mime_type
+  - size
+  - sha256
+  - item_id
+  - drive_id
+  - modified_at
+  - web_url
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - item_not_found
+  - file_too_large
+  - artifact_output_unavailable
+  - egress_host_not_allowed
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: upload_file
+  title: Upload file to OneDrive / SharePoint
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: artifact_handle
+    type: artifact_handle
+    required: true
+  - name: folder_id
+    type: string
+    required: false
+  - name: folder_path
+    type: string
+    required: false
+  - name: filename
+    type: string
+    required: true
+  - name: conflict_behavior
+    type: string
+    required: false
+  result_fields:
+  - item_id
+  - drive_id
+  - name
+  - path
+  - size
+  - mime_type
+  - web_url
+  - quick_xor_hash
+  - sha256
+  - conflict_behavior
+  - confirmed_after_timeout
+  - changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - name_conflict
+  - file_too_large
+  - artifact_input_unavailable
+  - egress_host_not_allowed
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: create_folder
+  title: Create OneDrive / SharePoint folder
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: parent_folder_id
+    type: string
+    required: false
+  - name: parent_folder_path
+    type: string
+    required: false
+  - name: name
+    type: string
+    required: true
+  result_fields:
+  - item_id
+  - drive_id
+  - name
+  - path
+  - web_url
+  - changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - folder_not_found
+  - name_conflict
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: create_share_link
+  title: Create OneDrive / SharePoint sharing link
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: item_id
+    type: string
+    required: false
+  - name: item_path
+    type: string
+    required: false
+  - name: link_type
+    type: string
+    required: false
+  - name: scope
+    type: string
+    required: false
+  result_fields:
+  - permission_id
+  - link_url
+  - link_type
+  - scope
+  - changed
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - item_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: list_site_libraries
+  title: List SharePoint site libraries
+  description: Resolves a SharePoint site URL and lists its document libraries. The Add library form uses
+    it so the admin picks the library (drive_id) explicitly.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: site_url
+    type: string
+    required: false
+  result_fields:
+  - site_id
+  - site_name
+  - site_web_url
+  - libraries
+  - total
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - invalid_client
+  - client_secret_expired
+  - tenant_not_multitenant
+  - site_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: find_workbooks
+  title: Find Excel workbooks
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: name
+    type: string
+    required: true
+  - name: limit
+    type: integer
+    required: false
+  - name: cursor
+    type: string
+    required: false
+  result_fields:
+  - workbooks
+  - next_cursor
+  - total
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - invalid_cursor
+  - authorization_required
+  - permission_denied
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: list_workbook_objects
+  title: List Excel worksheets and tables
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: workbook
+    type: object
+    required: true
+  result_fields:
+  - workbook
+  - worksheets
+  - tables
+  - truncated
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: read_range
+  title: Read Excel range
+  required_scopes:
+  - extension:invoke
+  - artifact:write
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: workbook
+    type: object
+    required: true
+  - name: worksheet
+    type: string
+    required: false
+  - name: address
+    type: string
+    required: false
+  - name: table
+    type: string
+    required: false
+  - name: header_mode
+    type: string
+    required: false
+  result_fields:
+  - dataset_handle
+  - row_count
+  - column_count
+  - schema
+  - preview
+  - workbook
+  - worksheet
+  - address
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - table_not_found
+  - range_invalid
+  - range_too_large
+  - dataset_output_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - internal_error
+- action_id: write_range
+  title: Write Excel range
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: workbook
+    type: object
+    required: true
+  - name: worksheet
+    type: string
+    required: true
+  - name: address
+    type: string
+    required: true
+  - name: dataset_handle
+    type: dataset_handle
+    required: false
+  - name: inline_rows
+    type: array
+    required: false
+  - name: include_header
+    type: boolean
+    required: false
+  - name: allow_formulas
+    type: boolean
+    required: false
+  result_fields:
+  - workbook
+  - worksheet
+  - address
+  - row_count
+  - column_count
+  - confirmation
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - worksheet_not_found
+  - range_invalid
+  - range_too_large
+  - dataset_input_unavailable
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
+- action_id: append_table_rows
+  title: Append Excel table rows
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  test_mode_behavior: suppress
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: workbook
+    type: object
+    required: true
+  - name: table
+    type: string
+    required: true
+  - name: dataset_handle
+    type: dataset_handle
+    required: false
+  - name: inline_rows
+    type: array
+    required: false
+  - name: dedupe_column
+    type: string
+    required: false
+  - name: allow_formulas
+    type: boolean
+    required: false
+  result_fields:
+  - workbook
+  - table
+  - row_count
+  - appended_count
+  - skipped_count
+  - changed
+  - confirmation
+  - first_row_index
+  - rows
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - authorization_required
+  - permission_denied
+  - workbook_not_found
+  - workbook_unsupported
+  - workbook_link_unsupported
+  - table_not_found
+  - range_too_large
+  - dataset_input_unavailable
+  - dedupe_conflict
+  - rate_limited
+  - provider_unavailable
+  - network_failure
+  - response_too_large
+  - timeout_unknown
+  - internal_error
