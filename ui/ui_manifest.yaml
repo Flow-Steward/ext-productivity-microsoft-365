@@ -4,3 +4,4 @@ pages:
   - ref: pages/mail.yaml
   - ref: pages/files.yaml
   - ref: pages/excel.yaml
+  - ref: pages/support.yaml

@@ -1,11 +1,12 @@
-# Every push and pull request runs the extension's tests and builds the archive
-# the catalog would publish. The Release workflow runs this same workflow.
+# Validate source changes and the current default branch when the repository
+# becomes public. The Release workflow also runs this workflow before publishing.
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+  public:
   workflow_call:
 
 permissions:
@@ -13,7 +14,7 @@ permissions:
 
 jobs:
   extension:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,7 +24,7 @@ jobs:
         # The host provides flowsteward-extension-sdk at runtime; tests use the
         # wheel committed in dev-wheels/ until the SDK is published.
         run: |
-          pip install pytest==8.3.5 PyYAML==6.0.3
+          pip install pytest==9.0.3 PyYAML==6.0.3
           if ls dev-wheels/flowsteward_extension_sdk-*.whl >/dev/null 2>&1; then pip install dev-wheels/flowsteward_extension_sdk-*.whl; fi
           # The extension's own runtime dependencies (python_requirements):
           # written by new_extension_repo.py, kept by the author.
