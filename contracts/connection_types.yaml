@@ -70,7 +70,7 @@ connection_types:
       type: object
       additionalProperties: false
       properties:
-        drive_target: {type: string, maxLength: 2048, description: Empty for the user's OneDrive, a SharePoint site URL, or a drive ID.}
+        drive_target: {type: string, maxLength: 2048, description: "Empty for the user's OneDrive, a SharePoint site URL, or a drive ID."}
     secret_schema:
       type: object
       additionalProperties: false

@@ -7,7 +7,6 @@ artifact_policies:
     filename: outlook-attachment.bin
     content_type: application/octet-stream
     max_size_bytes: 157286400
-    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
     retention_class: run_window
 - operation_id: send_message
   inputs:
@@ -18,7 +17,6 @@ artifact_policies:
     from_input: attachments
     required: false
     max_size_bytes: 157286400
-    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
 - operation_id: reply_message
   inputs:
   - *id001

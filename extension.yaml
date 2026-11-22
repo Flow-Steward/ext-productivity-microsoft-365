@@ -6,8 +6,9 @@ extension_id: flowsteward.microsoft-365
 kind: notification_provider
 version: 0.2.0
 display_name: Microsoft 365
-description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams for
-  project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in Teams.
+description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams
+  for project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in
+  Teams.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-productivity-microsoft-365/issues
@@ -26,8 +27,8 @@ listing:
   - notifications
   - files
   - spreadsheets
-  summary: Outlook mail and calendar, SharePoint files, Excel and Teams in workflows; notifications by email
-    or in Teams.
+  summary: Outlook mail and calendar, SharePoint files, Excel and Teams in workflows; notifications by
+    email or in Teams.
 features:
 - notify
 - action
@@ -274,9 +275,7 @@ runtime:
       help_page_id: setup-guide
       error_help_anchors:
         invalid_client: register-app
-        tenant_not_multitenant: register-app
         authorization_required: authorize-again
-        permission_denied: delegated-permissions
       flow:
         type: authorization_code
         pkce: s256
@@ -372,7 +371,6 @@ artifact_policies:
     filename: outlook-attachment.bin
     content_type: application/octet-stream
     max_size_bytes: 157286400
-    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
     retention_class: run_window
 - operation_id: send_message
   inputs:
@@ -383,7 +381,6 @@ artifact_policies:
     from_input: attachments
     required: false
     max_size_bytes: 157286400
-    max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES
 - operation_id: reply_message
   inputs:
   - *id001

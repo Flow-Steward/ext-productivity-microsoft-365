@@ -13,10 +13,9 @@ Logo: `icon.png` (the neutral Flow Steward package mark).
 ## Requirements
 
 - Flow Steward Core speaking `extension_host_v2`.
-- The new-mail trigger also needs the Core changes "Part A" of the Microsoft 365
-  task (background polls that keep their connection, receive a token or secrets,
-  and deliver each email exactly once). On an older Core every operation works, but
-  do not switch the trigger on.
+- Installing needs the Core changes "Part A" of the Microsoft 365 task (background
+  polls that keep their connection and deliver each email exactly once; Core v0.9.23
+  rejects the manifest field `supported_events`).
 - Notifications, system email and installing v0.2 at all need the Core changes
   "Part C" of the v0.2 task: per-connection-type notification targets, the explicit
   system email sender, OAuth tokens and the idempotency key on delivery, and

@@ -4,10 +4,10 @@
 # Core would read it as the grant's binding key.
 - operation_id: get_attachment
   outputs:
-    - {kind: artifact, value_type: artifact_handle, binding_key: attachment_artifact_handle, filename: outlook-attachment.bin, content_type: application/octet-stream, max_size_bytes: 157286400, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES, retention_class: run_window}
+    - {kind: artifact, value_type: artifact_handle, binding_key: attachment_artifact_handle, filename: outlook-attachment.bin, content_type: application/octet-stream, max_size_bytes: 157286400, retention_class: run_window}
 - operation_id: send_message
   inputs:
-    - &mail_attachments {kind: artifact, value_type: artifact_handle, binding_key: attachments, from_input: attachments, required: false, max_size_bytes: 157286400, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES}
+    - &mail_attachments {kind: artifact, value_type: artifact_handle, binding_key: attachments, from_input: attachments, required: false, max_size_bytes: 157286400}
 - operation_id: reply_message
   inputs:
     - *mail_attachments

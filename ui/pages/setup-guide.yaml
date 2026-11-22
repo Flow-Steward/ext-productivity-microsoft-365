@@ -3,7 +3,7 @@ title: Setup guide
 description: Register the Microsoft Entra app, choose permissions, restrict which mailboxes the app can reach, and set up Teams.
 project_scoped: true
 components:
-  - component_id: m365_setup_guide
+  - component_id: m365_setup_overview
     type: markdown
     title: Microsoft 365 setup guide
     body: |
@@ -11,32 +11,36 @@ components:
 
       - **Signed-in user (delegated).** A person clicks *Connect with Microsoft* and approves access to their own mail, calendar, files, workbooks or Teams. Use it for a personal mailbox, a shared mailbox that person can open, and for Excel and Teams. Excel and Teams posting work only this way: Microsoft does not allow apps to edit workbooks, or to post to channels and chats through Graph, without a user. The user signs in once; Flow Steward refreshes the access in the background.
       - **Organisation app (app-only).** An administrator registers an app once. Mailboxes such as `invoices@` or `cmr@` and SharePoint libraries are then added by address, with no person signed in. If the employee who set it up leaves, nothing breaks.
-
-      <a id="register-app"></a>
-      **1. Register the app in Microsoft Entra ID**
-
+  - component_id: m365_setup_register_app
+    type: markdown
+    title: 1. Register the app in Microsoft Entra ID
+    anchor_id: register-app
+    body: |
       In the Entra admin center open *App registrations → New registration*.
       - **Supported account types:** choose *Accounts in any organizational directory (multi-tenant)*. A single-tenant app fails to sign in with error AADSTS50194; Flow Steward signs in through the `organizations` endpoint.
       - **Redirect URI:** platform *Web*, and the exact Flow Steward callback URL shown on this extension's OAuth settings.
       - Create a **client secret** under *Certificates & secrets*. Note its expiry date: when it expires, every connection that uses it stops with `client_secret_expired`.
 
       Enter the Client ID and Client Secret in this extension's OAuth settings for signed-in connections. App-only connections take the tenant ID, client ID and client secret on each *Add mailbox* / *Add library* form.
-
-      <a id="delegated-permissions"></a>
-      **2. Delegated permissions (signed-in users)**
-
+  - component_id: m365_setup_delegated_permissions
+    type: markdown
+    title: 2. Delegated permissions (signed-in users)
+    anchor_id: delegated-permissions
+    body: |
       Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`, and for Teams `User.ReadBasic.All`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChannelMessage.Read.All`, `Chat.ReadWrite`, `ChatMessage.Send`. Each user approves only the service they connect. `ChannelMessage.Read.All` needs an administrator's consent: click *Grant admin consent* once.
-
-      <a id="app-permissions"></a>
-      **3. Application permissions (organisation app)**
-
+  - component_id: m365_setup_app_permissions
+    type: markdown
+    title: 3. Application permissions (organisation app)
+    anchor_id: app-permissions
+    body: |
       - **Mail and calendar: do NOT add the application permissions `Mail.ReadWrite`, `Mail.Send` or any `Calendars.*` in Entra.** If they were added earlier, remove them and their admin consent. An Entra mail grant covers **every mailbox in the organisation**, and Exchange restrictions cannot narrow it: the two permission systems add up. Mail and calendar access is granted in Exchange instead (step 4).
       - **Files:** add `Sites.Selected` (recommended) and grant the app access to each SharePoint site (step 5). `Files.ReadWrite.All` also works but reaches every site.
       - Click *Grant admin consent*.
-
-      <a id="restrict-mailboxes"></a>
-      **4. Give the app only the chosen mailboxes (Exchange Online)**
-
+  - component_id: m365_setup_restrict_mailboxes
+    type: markdown
+    title: 4. Give the app only the chosen mailboxes (Exchange Online)
+    anchor_id: restrict-mailboxes
+    body: |
       Run in Exchange Online PowerShell (`Connect-ExchangeOnline`), replacing the values:
 
       ```powershell
@@ -67,19 +71,22 @@ components:
       **System email mailbox.** To send password reset and welcome emails without SMTP, add a dedicated `noreply@company.com` to the mail scope above, connect it as an app-only mailbox, and let a platform administrator choose it in *Settings → Email*.
 
       Application access policies (`New-ApplicationAccessPolicy`) are the legacy way to do this; prefer RBAC for Applications.
-
-      <a id="sites-selected"></a>
-      **5. SharePoint sites for `Sites.Selected`**
-
+  - component_id: m365_setup_sites_selected
+    type: markdown
+    title: 5. SharePoint sites for `Sites.Selected`
+    anchor_id: sites-selected
+    body: |
       A SharePoint or global administrator grants the app write access to each site, for example with Microsoft Graph `POST /sites/{site-id}/permissions` (`roles: ["write"]`, `grantedToIdentities` = the app). Without a grant, *Add library* fails with `permission_denied`. With `Sites.Selected` there is no site search: enter the site URL and pick the library.
-
-      <a id="teams"></a>
-      **6. Teams**
-
+  - component_id: m365_setup_teams
+    type: markdown
+    title: 6. Teams
+    anchor_id: teams
+    body: |
       - **Service user.** Create an account such as `flowsteward@company.com` with a Teams licence, add it to the teams and chats it should post to, and connect it on the *Microsoft Teams* page. Messages appear under its name.
       - **Workflows webhook** (notifications only, no user): see *Create a Workflows webhook* on the *Microsoft Teams* page. The flow must allow *Anyone* to trigger it, and its owner's account must stay active.
-
-      <a id="authorize-again"></a>
-      **Authorize again**
-
+  - component_id: m365_setup_authorize_again
+    type: markdown
+    title: Authorize again
+    anchor_id: authorize-again
+    body: |
       `authorization_required` on a signed-in connection means the user's access was revoked or expired. Open the connection and click *Reconnect*.

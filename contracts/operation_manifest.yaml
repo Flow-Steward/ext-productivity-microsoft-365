@@ -2096,8 +2096,6 @@ operations:
       maxItems: 500
       items:
         type: object
-        minProperties: 1
-        maxProperties: 100
         additionalProperties:
           type:
           - string
@@ -3031,7 +3029,6 @@ operations:
       type: integer
       minimum: 5
       maximum: 1440
-      multipleOf: 5
       default: 30
   - name: working_hours_start
     value_type: text
@@ -3054,7 +3051,6 @@ operations:
       type: integer
       minimum: 15
       maximum: 240
-      multipleOf: 15
       default: 30
   - name: include_weekends
     value_type: boolean
