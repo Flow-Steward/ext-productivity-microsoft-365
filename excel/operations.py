@@ -1,4 +1,4 @@
-"""Excel operations (``m365_excel_user``, delegated only; task B5.4)."""
+"""Excel operations (``m365_user``, delegated only; task B5.4)."""
 
 from __future__ import annotations
 

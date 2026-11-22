@@ -30,7 +30,7 @@ def _payload(type_id: str, *, config: dict | None = None, secrets: dict | None =
 
 def test_user_mail_connection_defaults_to_me() -> None:
     context = resolve_connection(
-        _payload("m365_mail_user", secrets={"access_token": "t"}), service="mail"
+        _payload("m365_user", secrets={"access_token": "t"}), service="mail"
     )
     assert context.mode == "user"
     assert mailbox_base(context) == "/me"
@@ -39,7 +39,7 @@ def test_user_mail_connection_defaults_to_me() -> None:
 def test_user_mail_connection_with_shared_mailbox() -> None:
     context = resolve_connection(
         _payload(
-            "m365_mail_user", config={"mailbox": "cmr@acme.example"}, secrets={"access_token": "t"}
+            "m365_user", config={"mailbox": "cmr@acme.example"}, secrets={"access_token": "t"}
         ),
         service="mail",
     )
@@ -71,15 +71,31 @@ def test_app_mail_connection_requires_mailbox_and_secret() -> None:
 def test_service_mismatch_is_rejected() -> None:
     with pytest.raises(M365Error) as caught:
         resolve_connection(
-            _payload("m365_files_user", secrets={"access_token": "t"}), service="mail"
+            _payload(
+                "m365_files_app",
+                config={
+                    "tenant_id": "acme.onmicrosoft.com",
+                    "client_id": "11111111-2222-3333-4444-555555555555",
+                },
+                secrets={"client_secret": "s"},
+            ),
+            service="mail",
         )
     assert caught.value.code == "invalid_connection"
+
+
+def test_the_signed_in_account_serves_every_service() -> None:
+    for service in ("mail", "files", "excel", "calendar", "teams"):
+        context = resolve_connection(
+            _payload("m365_user", secrets={"access_token": "t"}), service=service
+        )
+        assert context.service == service and context.mode == "user"
 
 
 def test_connection_ref_must_match() -> None:
     with pytest.raises(M365Error):
         resolve_connection(
-            _payload("m365_mail_user", secrets={"access_token": "t"}),
+            _payload("m365_user", secrets={"access_token": "t"}),
             service="mail",
             connection_ref="other",
         )
@@ -87,7 +103,7 @@ def test_connection_ref_must_match() -> None:
 
 def test_missing_delegated_token_requires_authorization() -> None:
     with pytest.raises(M365Error) as caught:
-        resolve_connection(_payload("m365_excel_user"), service="excel")
+        resolve_connection(_payload("m365_user"), service="excel")
     assert caught.value.code == "authorization_required"
 
 

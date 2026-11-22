@@ -4,12 +4,12 @@ description: Post to Teams channels and chats from workflows, and send Flow Stew
 components:
   - component_id: teams_user_connections
     type: connection_form
-    title: Teams service users
-    description: A service user signs in once. Workflows then post and read as that user; Flow Steward refreshes the access in the background. Microsoft does not let an app post to channels without a user through Graph.
+    title: Microsoft 365 accounts (signed-in users)
+    description: One sign-in per account serves every tab (mail, calendar, files, Excel, Teams). Use a service account, for example flowsteward@company.com; messages appear under its name.
     data:
       oauth_provider_id: m365_oauth
-      connection_type: m365_teams_user
-      oauth_intent: teams_connect
+      connection_type: m365_user
+      oauth_intent: account_connect
       test_action: test_teams_connection
   - ref: ../components/teams_webhook_connection_form.yaml
   - component_id: teams_notes

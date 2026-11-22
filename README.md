@@ -35,10 +35,12 @@ Logo: `icon.png` (the neutral Flow Steward package mark).
 | Teams | **yes** for Graph (a service user) | no Graph posting; a Workflows webhook for notifications |
 | If the person leaves | the connection stops | nothing changes |
 
-Connection types: `m365_mail_user`, `m365_mail_app`, `m365_files_user`,
-`m365_files_app`, `m365_excel_user`, `m365_calendar_user`, `m365_calendar_app`,
-`m365_teams_user`, `m365_teams_webhook`. Add as many of each as you need, for example
-`invoices@` and `cmr@` as two `m365_mail_app` connections.
+Connection types: `m365_user` (one signed-in account for every service),
+`m365_mail_app`, `m365_files_app`, `m365_calendar_app` (organisation app, one mailbox,
+calendar or library each) and `m365_teams_webhook` (notifications only). Add as many
+of each as you need, for example `invoices@` and `cmr@` as two `m365_mail_app`
+connections. One `m365_user` sign-in requests every delegated permission at once, so
+an administrator grants admin consent once (Teams' `ChannelMessage.Read.All` needs it).
 
 Work or school accounts only; personal Microsoft accounts are not supported.
 
@@ -69,7 +71,7 @@ support message.
 
 ## Operations
 
-**Mail** (`m365_mail_user`, `m365_mail_app`):
+**Mail** (`m365_user`, `m365_mail_app`):
 - reads: `test_connection`, `list_mail_folders`, `search_messages`, `get_message`,
   `get_attachment` (→ artifact);
 - writes: `send_message`, `reply_message`, `forward_message`, `set_message_flags`,
@@ -77,16 +79,16 @@ support message.
   `changed: false`);
 - setup action: `check_mail_access` (app-only).
 
-**Files** (`m365_files_user`, `m365_files_app`):
+**Files** (`m365_user`, `m365_files_app`):
 - reads: `test_files_connection`, `list_drive_items`, `search_drive_files`,
   `download_file` (→ artifact), `list_site_libraries`;
 - writes: `upload_file` (simple PUT up to 4 MiB, upload session above that),
   `create_folder` (idempotent), `create_share_link`.
 
-**Excel** (`m365_excel_user`): `find_workbooks`, `list_workbook_objects`,
+**Excel** (`m365_user`): `find_workbooks`, `list_workbook_objects`,
 `read_range` (→ dataset), `write_range`, `append_table_rows`.
 
-**Calendar** (`m365_calendar_user`, `m365_calendar_app`):
+**Calendar** (`m365_user`, `m365_calendar_app`):
 - reads: `test_calendar_connection`, `list_calendars`, `list_events` (at most 31 days),
   `get_event`, `find_free_time` (`getSchedule`, up to 20 addresses, window under 62
   days; unknown availability → `complete: false` and no common slots);
@@ -94,7 +96,7 @@ support message.
   hidden key), `update_event`, `cancel_event` (organizer only), `respond_to_event`;
 - setup action: `check_calendar_access` (app-only).
 
-**Teams** (`m365_teams_user`): `test_teams_connection`, `list_teams`, `list_channels`,
+**Teams** (`m365_user`): `test_teams_connection`, `list_teams`, `list_channels`,
 `list_chats`, `list_messages`, `post_channel_message`, `reply_to_message`,
 `post_chat_message`. A post whose answer is lost is `timeout_unknown` and never posted
 again automatically. Messages are limited to about 28 KB; files are shared as links.
@@ -107,9 +109,9 @@ Which query serves which connection type:
 
 | Query | Type |
 |---|---|
-| `mail_folders_user` | `m365_mail_user` |
+| `mail_folders_user` | `m365_user` |
 | `mail_folders_app` | `m365_mail_app` |
-| `drive_folders_user`, `site_libraries_user`, `site_search_user` | `m365_files_user` |
+| `drive_folders_user`, `site_libraries_user`, `site_search_user` | `m365_user` |
 | `drive_folders_app`, `site_libraries_app` | `m365_files_app` |
 
 The workflow step editor of Core v0.9.23 shows pickers only through
@@ -172,8 +174,7 @@ The extension is a notification provider with two kinds of connection types:
 
 | Type | Route addresses | Notes |
 |---|---|---|
-| `m365_mail_user`, `m365_mail_app` | people: `to`, `cc`, `bcc` | Core's standard subject and text; draft-then-send flow |
-| `m365_teams_user` | a channel `team_id/channel_id` or a chat id | an HTML message with title, severity, summary and run link |
+| `m365_user`, `m365_mail_app` | people: `to`, `cc`, `bcc` | Core's standard subject and text; draft-then-send flow |
 | `m365_teams_webhook` | its own channel, fixed by the flow | an Adaptive Card; a 2xx means the flow accepted it |
 
 - Every route names its connection. A webhook route never names a channel.

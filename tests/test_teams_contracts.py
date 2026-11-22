@@ -36,7 +36,7 @@ def test_registry_covers_task_d3() -> None:
     }
     assert EFFECTFUL == {"post_channel_message", "reply_to_message", "post_chat_message"}
     assert all(row.service == "teams" for row in OPERATIONS.values())
-    assert CONNECTION_TYPES["m365_teams_user"] == ("teams", "user")
+    assert CONNECTION_TYPES["m365_user"] == ("*", "user")
     assert CONNECTION_TYPES["m365_teams_webhook"] == ("teams", "webhook")
 
 
@@ -45,7 +45,7 @@ def test_operations_serve_the_delegated_type_only() -> None:
     assert {row["operation_id"] for row in rows} == set(OPERATIONS)
     for row in rows:
         op = row["operation_id"]
-        assert row["connection_type_ids"] == ["m365_teams_user"], op
+        assert row["connection_type_ids"] == ["m365_user"], op
         assert "required_oauth_scopes" not in row
         inputs = {item["name"] for item in row["inputs"]}
         assert inputs - {"connection_ref"} == set(OPERATIONS[op].fields), op
@@ -70,7 +70,7 @@ def test_every_post_is_an_idempotent_suppressed_teams_effect() -> None:
 def test_one_query_per_picker_on_the_delegated_type() -> None:
     rows = _load("resource_queries.yaml")
     assert {row["query_id"] for row in rows} == QUERY_IDS
-    assert {row["connection_type_id"] for row in rows} == {"m365_teams_user"}
+    assert {row["connection_type_id"] for row in rows} == {"m365_user"}
     assert all(row["operation_id"] in OPERATIONS for row in rows)
 
 

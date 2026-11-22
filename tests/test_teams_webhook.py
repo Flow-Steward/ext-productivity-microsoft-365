@@ -284,7 +284,7 @@ def test_the_webhook_connection_keeps_the_url_out_of_its_repr() -> None:
 
 
 def test_a_user_connection_cannot_post_to_a_webhook() -> None:
-    connection = ConnectionContext("c", "m365_teams_user", "teams", "user", access_token="t")
+    connection = ConnectionContext("c", "m365_user", "teams", "user", access_token="t")
     with pytest.raises(M365Error) as raised:
         post_webhook_for_connection(connection, CARD, opener=FakeOpener([]))
     assert raised.value.code == "notification_connection_incompatible"

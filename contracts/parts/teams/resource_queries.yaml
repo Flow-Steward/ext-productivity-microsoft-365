@@ -4,7 +4,7 @@
 # the format of a Teams notification route.
 - query_id: teams_user
   operation_id: list_teams
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams teams
   description: Teams the signed-in user has joined, filtered by name.
   cursor_mode: none
@@ -13,7 +13,7 @@
   resource_kind: team
 - query_id: channels_user
   operation_id: list_channels
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams channels
   description: Channels of the joined teams as "Team / Channel"; the value is team_id/channel_id.
   cursor_mode: none
@@ -22,7 +22,7 @@
   resource_kind: channel
 - query_id: chats_user
   operation_id: list_chats
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams chats
   description: The signed-in user's chats by topic or member names; the value is the chat ID.
   cursor_mode: cursor

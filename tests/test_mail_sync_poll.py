@@ -387,7 +387,7 @@ def test_410_in_live_recovers_and_delivers_mail_sent_during_the_reset() -> None:
 def test_delegated_connection_resolves_its_address_once() -> None:
     connection = {
         "connection_id": "conn-pat",
-        "connection_type_id": "m365_mail_user",
+        "connection_type_id": "m365_user",
         "config": {},
         "secrets": {"access_token": "acme-test-token"},
         "ingress_config": {"mail_trigger_mode": "polling"},

@@ -9,7 +9,7 @@
   description: Resolves the connection's drive (own OneDrive, a site's default library, a drive ID, or the app-only library) and returns its name, site and quota when available. App-only connections also check that the library belongs to the configured site.
   operation_kind: source
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
   outputs:
@@ -38,7 +38,7 @@
   description: Lists one folder, addressed by folder_id or folder_path (default the library root), one page at a time with an opaque cursor.
   operation_kind: source
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &folder_id_input {name: folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
@@ -82,7 +82,7 @@
   description: "Delegated connections: Graph drive search (recursive, names and content), optionally kept to one folder and filtered by file type. App-only connections: a case-insensitive name filter inside one folder, not recursive, because Sites.Selected grants no search. search_mode in the result says which ran."
   operation_kind: source
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: query, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
@@ -107,7 +107,7 @@
   description: Streams one file, addressed by item_id or item_path, into an artifact (limit FS_EXTENSION_ARTIFACT_MAX_BYTES, default 200 MB). The pre-authenticated download URL is used without the Graph token and never returned.
   operation_kind: source
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &item_id_input {name: item_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
@@ -135,7 +135,7 @@
   description: "Uploads an artifact into a folder (default the library root): up to 4 MB in one PUT, larger files through an upload session. conflict_behavior fail (default), rename or replace. Never repeated automatically: an unconfirmed result is timeout_unknown. With fail or replace the target is read back and accepted only with the artifact's size and hash; with rename an unconfirmed result is always timeout_unknown."
   operation_kind: action
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: artifact_handle, value_type: artifact_handle, required: true}
@@ -165,7 +165,7 @@
   description: "Creates a folder inside a parent folder (default the library root). Idempotent: an existing folder with the same name is success with changed false; an existing file with that name is name_conflict."
   operation_kind: action
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: parent_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 256}}
@@ -190,7 +190,7 @@
   description: Creates a view or edit sharing link for an item. Scope organization (default) or anonymous when the tenant allows it. Graph returns an existing link of the same type and scope (changed false). Never repeated automatically.
   operation_kind: action
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *item_id_input
@@ -212,7 +212,7 @@
   description: Resolves a SharePoint site URL (GET /sites/{hostname}:/{path}) and lists every document library of the site with its drive ID. Without site_url it uses the connection's site. A site with several libraries needs an explicit choice; there is no implicit default.
   operation_kind: source
   category: file_transfer
-  connection_type_ids: [m365_files_user, m365_files_app]
+  connection_type_ids: [m365_user, m365_files_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: site_url, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 2048}}

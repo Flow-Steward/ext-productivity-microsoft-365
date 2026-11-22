@@ -1,7 +1,7 @@
 queries:
 - query_id: mail_folders_user
   operation_id: list_mail_folders
-  connection_type_id: m365_mail_user
+  connection_type_id: m365_user
   display_name: Outlook folders
   description: Well-known folder shortcuts, then every folder of the signed-in user's (or shared) mailbox
     by path.
@@ -21,7 +21,7 @@ queries:
   resource_kind: mail_folder
 - query_id: drive_folders_user
   operation_id: list_drive_items
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: OneDrive / SharePoint folders
   description: Folders of the library root, filtered by name; type a path such as /Invoices to list the
     folders inside it. Not recursive.
@@ -41,7 +41,7 @@ queries:
   resource_kind: folder
 - query_id: site_libraries_user
   operation_id: list_site_libraries
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: SharePoint site libraries
   description: Document libraries of the site URL typed as the search (or of the connection's site target),
     with their drive IDs.
@@ -61,7 +61,7 @@ queries:
   resource_kind: drive
 - query_id: site_search_user
   operation_id: list_site_libraries
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: SharePoint sites
   description: SharePoint sites the signed-in user can see, by name. The value is the site URL, usable
     as drive_target.
@@ -71,7 +71,7 @@ queries:
   resource_kind: site
 - query_id: calendars_user
   operation_id: list_calendars
-  connection_type_id: m365_calendar_user
+  connection_type_id: m365_user
   display_name: Outlook calendars
   description: The default calendar first, then every other calendar of the signed-in user's (or shared)
     mailbox.
@@ -90,7 +90,7 @@ queries:
   resource_kind: calendar
 - query_id: teams_user
   operation_id: list_teams
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams teams
   description: Teams the signed-in user has joined, filtered by name.
   cursor_mode: none
@@ -99,7 +99,7 @@ queries:
   resource_kind: team
 - query_id: channels_user
   operation_id: list_channels
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams channels
   description: Channels of the joined teams as "Team / Channel"; the value is team_id/channel_id.
   cursor_mode: none
@@ -108,7 +108,7 @@ queries:
   resource_kind: channel
 - query_id: chats_user
   operation_id: list_chats
-  connection_type_id: m365_teams_user
+  connection_type_id: m365_user
   display_name: Teams chats
   description: The signed-in user's chats by topic or member names; the value is the chat ID.
   cursor_mode: cursor

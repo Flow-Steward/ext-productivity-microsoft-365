@@ -1,6 +1,6 @@
 """Choosing the drive of a files connection, and SharePoint site/library discovery.
 
-Delegated (``m365_files_user``), config ``drive_target``:
+Delegated (``m365_user``), config ``drive_target``:
 
 - empty → the signed-in user's OneDrive (``/me/drive``);
 - a SharePoint site URL → the site is resolved, then its default library

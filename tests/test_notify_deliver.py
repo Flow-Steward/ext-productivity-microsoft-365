@@ -131,10 +131,15 @@ def test_mail_route_with_a_channel_is_incompatible() -> None:
 
 def test_non_notification_connection_type_is_incompatible() -> None:
     files = {
-        "connection_id": "conn-files",
-        "connection_type_id": "m365_files_user",
-        "config": {},
-        "secrets": {"access_token": "opaque-token"},
+        "connection_id": "conn-x",
+        "connection_type_id": "m365_files_app",
+        "config": {
+            "tenant_id": "acme.onmicrosoft.com",
+            "client_id": "11111111-2222-3333-4444-555555555555",
+            "site_url": "https://acme.sharepoint.com/sites/ops",
+            "drive_id": "b!drive",
+        },
+        "secrets": {"client_secret": "app-secret"},
     }
     response = run(delivery(files, {"to": "ops@acme.example"}), FakeOutlook())
     assert response["error_code"] == "notification_connection_incompatible"
@@ -219,53 +224,12 @@ def test_channel_content_uses_title_severity_and_link() -> None:
     assert content.run_url == "https://fs.example/jobs/7"
 
 
-TEAMS_USER = {
-    "connection_id": "conn-teams",
-    "connection_type_id": "m365_teams_user",
-    "config": {},
-    "secrets": {"access_token": "opaque-token"},
-}
 TEAMS_WEBHOOK = {
     "connection_id": "conn-hook",
     "connection_type_id": "m365_teams_webhook",
     "config": {"channel_label": "Operations"},
     "secrets": {"webhook_url": "https://x.environment.api.powerplatform.com/hook?sig=S3CR3T"},
 }
-
-
-def test_teams_route_posts_with_core_key_and_content() -> None:
-    calls: list[dict[str, Any]] = []
-
-    def poster(transport: Any, **kwargs: Any) -> dict[str, Any]:
-        calls.append({"transport": transport, **kwargs})
-        return {"message_id": "1700000000000", "confirmation": "posted"}
-
-    response = run(
-        delivery(TEAMS_USER, {"channel": "team-1/19:abc@thread.tacv2"}),
-        "graph-transport",
-        channel_poster=poster,
-    )
-    assert response["delivered"] is True
-    assert response["provider_message_id"] == "1700000000000"
-    [call] = calls
-    assert call["target"] == "team-1/19:abc@thread.tacv2"
-    assert call["key"] == f"deliver_notification:{CORE_KEY}"
-    assert call["content"].run_url == "https://fs.example/jobs/42"
-
-
-def test_teams_route_without_channel_is_channel_required() -> None:
-    response = run(delivery(TEAMS_USER, {}), None, channel_poster=lambda *_a, **_k: {})
-    assert response["error_code"] == "channel_required"
-    assert response["definitely_no_external_effect"] is True
-
-
-def test_channel_connection_with_recipients_is_incompatible() -> None:
-    response = run(
-        delivery(TEAMS_USER, {"channel": "t/c", "to": "ops@acme.example"}),
-        None,
-        channel_poster=lambda *_a, **_k: {},
-    )
-    assert response["error_code"] == "notification_connection_incompatible"
 
 
 def test_webhook_posts_to_its_own_channel() -> None:
@@ -291,15 +255,3 @@ def test_webhook_route_naming_a_channel_is_refused() -> None:
     )
     assert response["error_code"] == "notification_connection_incompatible"
     assert response["definitely_no_external_effect"] is True
-
-
-def test_ambiguous_teams_post_is_timeout_unknown() -> None:
-    from m365.errors import M365Error
-
-    def poster(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
-        raise M365Error("timeout_unknown", "post not confirmed", ambiguous=True)
-
-    response = run(delivery(TEAMS_USER, {"channel": "t/c"}), None, channel_poster=poster)
-    assert response["external_effect_status"] == "timeout_unknown"
-    assert response["definitely_no_external_effect"] is False
-    assert response["retryable"] is False

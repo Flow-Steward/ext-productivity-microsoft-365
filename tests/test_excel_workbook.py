@@ -174,12 +174,22 @@ def test_find_workbooks_takes_only_a_name() -> None:
     assert fake.calls == []
 
 
-def test_excel_needs_the_delegated_excel_connection() -> None:
+def test_excel_needs_a_signed_in_account() -> None:
     from excel.operations import OPERATIONS
     from m365.runtime import run_operation
 
     request = payload("list_workbook_objects", {"workbook": ids_workbook()})
-    request["action"]["target"]["connection"]["connection_type_id"] = "m365_files_user"
+    request["action"]["target"]["connection"] = {
+        "connection_id": "conn-x",
+        "connection_type_id": "m365_files_app",
+        "config": {
+            "tenant_id": "acme.onmicrosoft.com",
+            "client_id": "11111111-2222-3333-4444-555555555555",
+            "site_url": "https://acme.sharepoint.com/sites/ops",
+            "drive_id": "b!drive",
+        },
+        "secrets": {"client_secret": "app-secret"},
+    }
 
     response = run_operation(request, OPERATIONS, transport_factory=lambda _c: FakeExcel())
 

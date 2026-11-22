@@ -4,12 +4,12 @@ description: Connect Outlook calendars for this project, by a signed-in user or 
 components:
   - component_id: calendar_user_connections
     type: connection_form
-    title: Calendars of signed-in users
-    description: A user signs in with Microsoft. Leave Mailbox empty for their own calendar, or enter a shared mailbox whose calendar they can open.
+    title: Microsoft 365 accounts (signed-in users)
+    description: One sign-in per account serves every tab (mail, calendar, files, Excel, Teams). The calendar is the account's own, or a shared mailbox's calendar it can open (set Mailbox on the connection).
     data:
       oauth_provider_id: m365_oauth
-      connection_type: m365_calendar_user
-      oauth_intent: calendar_connect
+      connection_type: m365_user
+      oauth_intent: account_connect
       test_action: test_calendar_connection
   - ref: ../components/calendar_app_connection_form.yaml
   - component_id: calendar_notes

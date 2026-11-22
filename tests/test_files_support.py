@@ -32,7 +32,7 @@ UPLOAD_URL = "https://acme.sharepoint.com/_api/v2.0/drives/x/items/y/uploadSessi
 
 USER_CONNECTION: dict[str, Any] = {
     "connection_id": "conn-files-user",
-    "connection_type_id": "m365_files_user",
+    "connection_type_id": "m365_user",
     "config": {},
     "secrets": {"access_token": TOKEN},
 }

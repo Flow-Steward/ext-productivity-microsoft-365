@@ -1,12 +1,12 @@
 # Fragment for contracts/operation_manifest.yaml (merged by the lead). Task B5.4.
-# Excel is delegated only: every operation serves m365_excel_user. No
+# Excel is delegated only: every operation serves m365_user. No
 # required_oauth_scopes; the excel_connect intent requests the scopes (B4.4).
 - operation_id: find_workbooks
   display_name: Find Excel workbooks
   description: Search the signed-in user's OneDrive for Business and SharePoint sites for .xlsx workbooks by name with the Microsoft Search API.
   operation_kind: source
   category: spreadsheet
-  connection_type_ids: [m365_excel_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: name, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
@@ -44,7 +44,7 @@
   description: List the worksheets and tables of one workbook.
   operation_kind: source
   category: spreadsheet
-  connection_type_ids: [m365_excel_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &workbook_input
@@ -95,7 +95,7 @@
   description: Read a worksheet range (an A1 address, or the used range) or a whole table into a bounded NDJSON dataset.
   operation_kind: source
   category: spreadsheet
-  connection_type_ids: [m365_excel_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *workbook_input
@@ -127,7 +127,7 @@
   description: Replace one worksheet range with dataset rows or inline values in a workbook session. An unconfirmed write is never repeated.
   operation_kind: action
   category: spreadsheet
-  connection_type_ids: [m365_excel_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *workbook_input
@@ -154,7 +154,7 @@
   description: Append up to 500 rows to a table in one request, in the table's column order, with an optional dedupe column. An unconfirmed append is never repeated.
   operation_kind: action
   category: spreadsheet
-  connection_type_ids: [m365_excel_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *workbook_input

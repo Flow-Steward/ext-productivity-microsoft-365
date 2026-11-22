@@ -49,7 +49,7 @@ def _operation_payload(*, test_mode: bool = False, operation: str = "do_write") 
             "target": {
                 "connection": {
                     "connection_id": "conn-1",
-                    "connection_type_id": "m365_mail_user",
+                    "connection_type_id": "m365_user",
                     "secrets": {"access_token": "t"},
                 }
             },

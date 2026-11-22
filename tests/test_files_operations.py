@@ -552,7 +552,7 @@ def test_query_ids_are_one_per_connection_type() -> None:
         "site_libraries_app",
         "site_search_user",
     }
-    assert QUERY_TYPES["site_search_user"] == "m365_files_user"
+    assert QUERY_TYPES["site_search_user"] == "m365_user"
 
 
 def test_folder_query_lists_root_folders_for_each_type() -> None:

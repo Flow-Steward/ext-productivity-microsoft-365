@@ -1,19 +1,20 @@
 connection_types:
-  - connection_type_id: m365_mail_user
-    display_name: Outlook mailbox (signed-in user)
-    description: A user signs in with Microsoft. Their own mailbox, or a shared mailbox they can access.
+  - connection_type_id: m365_user
+    display_name: Microsoft 365 account (signed-in user)
+    description: A user signs in with Microsoft once. The same connection works for Outlook mail and calendar, OneDrive and SharePoint files, Excel and Microsoft Teams; Flow Steward refreshes the access in the background.
     auth:
       type: oauth2
       provider_id: m365_oauth
       scopes:
-        required: [openid, profile, email, User.Read, Mail.ReadWrite, Mail.Send, Mail.ReadWrite.Shared, Mail.Send.Shared]
+        required: [openid, profile, email, User.Read, User.ReadBasic.All, Mail.ReadWrite, Mail.Send, Mail.ReadWrite.Shared, Mail.Send.Shared, Calendars.ReadWrite, Calendars.ReadWrite.Shared, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send, ChannelMessage.Read.All, Chat.ReadWrite, ChatMessage.Send]
         # Microsoft returns a refresh token but never lists offline_access as granted.
         optional: [offline_access]
     config_schema:
       type: object
       additionalProperties: false
       properties:
-        mailbox: {type: string, maxLength: 320, description: Optional shared mailbox address the signed-in user can access.}
+        mailbox: {type: string, maxLength: 320, description: Optional shared mailbox (mail and calendar) the signed-in user can access. Empty for their own.}
+        drive_target: {type: string, maxLength: 2048, description: "Files: empty for the user's OneDrive, a SharePoint site URL, or a drive ID."}
     secret_schema:
       type: object
       additionalProperties: false
@@ -26,8 +27,9 @@ connection_types:
         mail_trigger_folder: {type: string, default: inbox, maxLength: 512}
         last_inbound_sync_at: {type: string}
         mail_sync: {type: object}
-    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, poll_mailbox, deliver_notification]
-    # Task C1: deliveries through this type address people by email.
+    capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, poll_mailbox, test_files_connection, list_site_libraries, list_drive_items, search_drive_files, download_file, upload_file, create_folder, create_share_link, find_workbooks, list_workbook_objects, read_range, write_range, append_table_rows, test_calendar_connection, list_calendars, list_events, get_event, create_event, update_event, cancel_event, respond_to_event, find_free_time, test_teams_connection, list_teams, list_channels, list_chats, list_messages, post_channel_message, reply_to_message, post_chat_message, deliver_notification]
+    # Task C1: notifications through a signed-in account are emails. Teams channel
+    # notifications go through m365_teams_webhook (one target kind per type).
     notification: {target_kind: recipient, ledger_channel: email}
   - connection_type_id: m365_mail_app
     display_name: Outlook mailbox (organisation app)
@@ -58,26 +60,6 @@ connection_types:
     capabilities: [test_connection, list_mail_folders, search_messages, get_message, get_attachment, send_message, reply_message, forward_message, set_message_flags, move_messages, delete_messages, check_mail_access, poll_mailbox, deliver_notification]
     # Task C1: deliveries through this type address people by email.
     notification: {target_kind: recipient, ledger_channel: email}
-  - connection_type_id: m365_files_user
-    display_name: OneDrive / SharePoint (signed-in user)
-    description: A user signs in with Microsoft. Their OneDrive or a SharePoint library they can access.
-    auth:
-      type: oauth2
-      provider_id: m365_oauth
-      scopes:
-        required: [openid, profile, email, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
-        # Microsoft returns a refresh token but never lists offline_access as granted.
-        optional: [offline_access]
-    config_schema:
-      type: object
-      additionalProperties: false
-      properties:
-        drive_target: {type: string, maxLength: 2048, description: "Empty for the user's OneDrive, a SharePoint site URL, or a drive ID."}
-    secret_schema:
-      type: object
-      additionalProperties: false
-      properties: {access_token: {type: string}}
-    capabilities: [test_files_connection, list_site_libraries, list_drive_items, search_drive_files, download_file, upload_file, create_folder, create_share_link]
   - connection_type_id: m365_files_app
     display_name: SharePoint library (organisation app)
     description: The organisation's Entra app works with one SharePoint library, without a signed-in user.
@@ -97,42 +79,6 @@ connection_types:
       required: [client_secret]
       properties: {client_secret: {type: string}}
     capabilities: [test_files_connection, list_site_libraries, list_drive_items, search_drive_files, download_file, upload_file, create_folder, create_share_link]
-  - connection_type_id: m365_excel_user
-    display_name: Excel (signed-in user)
-    description: A user signs in once; workflows then read and write Excel workbooks in OneDrive for Business or SharePoint Online in the background.
-    auth:
-      type: oauth2
-      provider_id: m365_oauth
-      scopes:
-        required: [openid, profile, email, User.Read, Files.ReadWrite, Files.ReadWrite.All, Sites.ReadWrite.All]
-        # Microsoft returns a refresh token but never lists offline_access as granted.
-        optional: [offline_access]
-    config_schema: {type: object, additionalProperties: false, properties: {}}
-    secret_schema:
-      type: object
-      additionalProperties: false
-      properties: {access_token: {type: string}}
-    capabilities: [find_workbooks, list_workbook_objects, read_range, write_range, append_table_rows]
-  - connection_type_id: m365_calendar_user
-    display_name: Outlook calendar (signed-in user)
-    description: A user signs in with Microsoft. Their own calendar, or the calendar of a shared mailbox they can access.
-    auth:
-      type: oauth2
-      provider_id: m365_oauth
-      scopes:
-        required: [openid, profile, email, User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared]
-        # Microsoft returns a refresh token but never lists offline_access as granted.
-        optional: [offline_access]
-    config_schema:
-      type: object
-      additionalProperties: false
-      properties:
-        mailbox: {type: string, maxLength: 320, description: Optional shared mailbox whose calendar the signed-in user can access.}
-    secret_schema:
-      type: object
-      additionalProperties: false
-      properties: {access_token: {type: string}}
-    capabilities: [test_calendar_connection, list_calendars, list_events, get_event, create_event, update_event, cancel_event, respond_to_event, find_free_time]
   - connection_type_id: m365_calendar_app
     display_name: Outlook calendar (organisation app)
     description: The organisation's Entra app manages the calendar of one mailbox, without a signed-in user. Access is granted through Exchange RBAC only.
@@ -152,24 +98,6 @@ connection_types:
       required: [client_secret]
       properties: {client_secret: {type: string}}
     capabilities: [test_calendar_connection, list_calendars, list_events, get_event, create_event, update_event, cancel_event, respond_to_event, find_free_time, check_calendar_access]
-  - connection_type_id: m365_teams_user
-    display_name: Microsoft Teams (signed-in service user)
-    description: A service user signs in once; workflows then post to channels and chats and read messages in the background.
-    auth:
-      type: oauth2
-      provider_id: m365_oauth
-      scopes:
-        required: [openid, profile, email, User.Read, User.ReadBasic.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send, ChannelMessage.Read.All, Chat.ReadWrite, ChatMessage.Send]
-        # Microsoft returns a refresh token but never lists offline_access as granted.
-        optional: [offline_access]
-    config_schema: {type: object, additionalProperties: false, properties: {}}
-    secret_schema:
-      type: object
-      additionalProperties: false
-      properties: {access_token: {type: string}}
-    capabilities: [test_teams_connection, list_teams, list_channels, list_chats, list_messages, post_channel_message, reply_to_message, post_chat_message, deliver_notification]
-    # Task C1: routes pick a channel or chat (`team_id/channel_id` or a chat id).
-    notification: {target_kind: channel, ledger_channel: chat, channel_source: route}
   - connection_type_id: m365_teams_webhook
     display_name: Teams channel (Workflows webhook)
     description: A Teams Workflows flow ("When a Teams webhook request is received") posts Flow Steward notifications to its channel. Notifications only; no Graph, no user.

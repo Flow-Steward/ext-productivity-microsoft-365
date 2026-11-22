@@ -63,7 +63,7 @@ OPERATIONS: dict[str, Operation] = {
 }
 
 #: Resource query id → the one connection type it serves.
-CALENDAR_QUERIES = {"calendars_user": "m365_calendar_user", "calendars_app": "m365_calendar_app"}
+CALENDAR_QUERIES = {"calendars_user": "m365_user", "calendars_app": "m365_calendar_app"}
 QUERY_IDS = frozenset(CALENDAR_QUERIES)
 
 

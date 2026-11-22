@@ -32,7 +32,7 @@ def test_operation_fragment_matches_the_registry() -> None:
 
     assert set(operations) == set(OPERATIONS)
     for operation_id, row in operations.items():
-        assert row["connection_type_ids"] == ["m365_excel_user"]
+        assert row["connection_type_ids"] == ["m365_user"]
         assert "required_oauth_scopes" not in row
         inputs = {item["name"] for item in row["inputs"]}
         assert inputs - {"connection_ref"} == set(OPERATIONS[operation_id].fields)

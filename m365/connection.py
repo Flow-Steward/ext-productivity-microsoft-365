@@ -15,15 +15,15 @@ from typing import Any
 
 from .errors import M365Error
 
+#: The one delegated type: a signed-in account that serves every service.
+USER_TYPE = "m365_user"
+ANY_SERVICE = "*"
+
 CONNECTION_TYPES: dict[str, tuple[str, str]] = {
-    "m365_mail_user": ("mail", "user"),
+    USER_TYPE: (ANY_SERVICE, "user"),
     "m365_mail_app": ("mail", "app"),
-    "m365_files_user": ("files", "user"),
     "m365_files_app": ("files", "app"),
-    "m365_excel_user": ("excel", "user"),
-    "m365_calendar_user": ("calendar", "user"),
     "m365_calendar_app": ("calendar", "app"),
-    "m365_teams_user": ("teams", "user"),
     "m365_teams_webhook": ("teams", "webhook"),
 }
 
@@ -107,7 +107,7 @@ def resolve_connection(
         connection.get("connection_type_id") or connection.get("connection_type"), limit=128
     )
     kind = CONNECTION_TYPES.get(type_id)
-    if kind is None or kind[0] != service:
+    if kind is None or kind[0] not in (service, ANY_SERVICE):
         raise M365Error(
             "invalid_connection", f"This operation needs a Microsoft 365 {service} connection"
         )
@@ -169,8 +169,10 @@ def mailbox_base(context: ConnectionContext) -> str:
 
 
 __all__ = [
+    "ANY_SERVICE",
     "CONNECTION_TYPES",
     "MAILBOX_SERVICES",
+    "USER_TYPE",
     "ConnectionContext",
     "connection_payload",
     "mailbox_base",

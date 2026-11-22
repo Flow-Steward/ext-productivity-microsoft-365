@@ -68,7 +68,7 @@ Do **not** edit `extension.yaml`, `contracts/connection_types.yaml` or the
 - `operations.yaml`: a list of operation entries in the shape of
   `~/www/ext-google-workspace/contracts/operation_manifest.yaml`. No
   `required_oauth_scopes`; `connection_type_ids` lists both types of the service
-  (Excel: only `m365_excel_user`).
+  (Excel: only `m365_user`).
 - `resource_queries.yaml`: list entries in the shape of
   `~/www/ext-google-workspace/contracts/resource_queries.yaml`, **one entry per
   connection type**.

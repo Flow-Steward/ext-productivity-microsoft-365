@@ -14,7 +14,7 @@ from mail.operations import OPERATIONS, QUERY_IDS
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = ROOT / "contracts" / "parts" / "mail"
-MAIL_TYPES = ["m365_mail_user", "m365_mail_app"]
+MAIL_TYPES = ["m365_user", "m365_mail_app"]
 EFFECTFUL = {op for op, row in OPERATIONS.items() if row.effectful}
 
 

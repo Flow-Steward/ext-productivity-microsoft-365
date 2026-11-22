@@ -11,7 +11,7 @@ from mail_sync import state
 from mail_sync.machine import EVENT_TYPE
 
 PARTS = Path(__file__).resolve().parents[1] / "contracts" / "parts" / "mail_sync"
-MAIL_TYPES = ["m365_mail_user", "m365_mail_app"]
+MAIL_TYPES = ["m365_user", "m365_mail_app"]
 
 
 def load(name: str) -> Any:

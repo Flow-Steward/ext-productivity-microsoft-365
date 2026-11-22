@@ -384,7 +384,7 @@ def payload(
             "target": {
                 "connection": {
                     "connection_id": "conn-acme-excel",
-                    "connection_type_id": "m365_excel_user",
+                    "connection_type_id": "m365_user",
                     "config": {},
                     "secrets": {"access_token": "acme-delegated-token"},
                 }

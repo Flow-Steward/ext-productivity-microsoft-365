@@ -89,8 +89,17 @@ def test_an_app_connection_without_mailbox_is_invalid() -> None:
     assert response["error_code"] == "invalid_connection"
 
 
-def test_a_mail_connection_cannot_run_calendar_operations() -> None:
-    connection = {**USER_CONNECTION, "connection_type_id": "m365_mail_user"}
+def test_another_services_app_connection_cannot_run_calendar_operations() -> None:
+    connection = {
+        "connection_id": "conn-x",
+        "connection_type_id": "m365_mail_app",
+        "config": {
+            "tenant_id": "acme.onmicrosoft.com",
+            "client_id": "11111111-2222-3333-4444-555555555555",
+            "mailbox": "cmr@acme.example",
+        },
+        "secrets": {"client_secret": "app-secret"},
+    }
     response = _run(ScriptedGraph(), "list_calendars", connection=connection)
     assert response["error_code"] == "invalid_connection"
 

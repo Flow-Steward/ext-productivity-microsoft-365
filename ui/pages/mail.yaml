@@ -4,12 +4,12 @@ description: Connect Outlook mailboxes for this project, by a signed-in user or 
 components:
   - component_id: mail_user_connections
     type: connection_form
-    title: Mailboxes of signed-in users
-    description: A user signs in with Microsoft. Leave Mailbox empty for their own mailbox, or enter a shared mailbox they can open.
+    title: Microsoft 365 accounts (signed-in users)
+    description: One sign-in per account serves every tab (mail, calendar, files, Excel, Teams). Mail uses the account's own mailbox, or a shared mailbox it can open (set Mailbox on the connection).
     data:
       oauth_provider_id: m365_oauth
-      connection_type: m365_mail_user
-      oauth_intent: mail_connect
+      connection_type: m365_user
+      oauth_intent: account_connect
       test_action: test_connection
   - ref: ../components/mail_app_connection_form.yaml
   - component_id: mail_trigger_notes

@@ -26,7 +26,7 @@ from mail.send import KEY_PROPERTY_ID, STATE_PROPERTY_ID
 STEP_EXECUTION_ID = "6a1b2c3d-4e5f-4a6b-8c7d-000000000101"
 USER_CONNECTION: dict[str, Any] = {
     "connection_id": "conn-acme-mail",
-    "connection_type_id": "m365_mail_user",
+    "connection_type_id": "m365_user",
     "config": {},
     "secrets": {"access_token": "opaque-token"},
 }

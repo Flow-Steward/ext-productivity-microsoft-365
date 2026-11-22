@@ -8,7 +8,7 @@
 #                                             Sites.Selected grants no site search)
 - query_id: drive_folders_user
   operation_id: list_drive_items
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: OneDrive / SharePoint folders
   description: Folders of the library root, filtered by name; type a path such as /Invoices to list the folders inside it. Not recursive.
   cursor_mode: cursor
@@ -26,7 +26,7 @@
   resource_kind: folder
 - query_id: site_libraries_user
   operation_id: list_site_libraries
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: SharePoint site libraries
   description: Document libraries of the site URL typed as the search (or of the connection's site target), with their drive IDs.
   cursor_mode: none
@@ -44,7 +44,7 @@
   resource_kind: drive
 - query_id: site_search_user
   operation_id: list_site_libraries
-  connection_type_id: m365_files_user
+  connection_type_id: m365_user
   display_name: SharePoint sites
   description: SharePoint sites the signed-in user can see, by name. The value is the site URL, usable as drive_target.
   cursor_mode: cursor

@@ -45,7 +45,7 @@ connection's resolved secrets to the action as operations do"):
 ```json
 {
   "connection_id": "…",
-  "connection_type_id": "m365_mail_user | m365_mail_app",
+  "connection_type_id": "m365_user | m365_mail_app",
   "config": {"mailbox": "…", "tenant_id": "…", "client_id": "…"},
   "secrets": {"access_token": "…"} | {"client_secret": "…"},
   "ingress_config": {"mail_trigger_mode": "polling", "mail_sync": {…}, …},
@@ -243,7 +243,7 @@ For the Mail page, use `phase`, `last_inbound_sync_at` (the last poll),
    - Without the bump, switching off and on again would continue the old delta
      link, and mail received while the trigger was off would be delivered.
 4. **A2.** Call `poll_mailbox` only for the action's `connection_type_ids`
-   (`m365_mail_user`, `m365_mail_app`). Pass the refreshed `access_token` (`_user`)
+   (`m365_user`, `m365_mail_app`). Pass the refreshed `access_token` (`_user`)
    or the connection's own `client_secret` (`_app`) in `target.connection.secrets`,
    together with `ingress_config` and the two versions. The action declares no
    `provider_secrets`.

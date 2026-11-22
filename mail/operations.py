@@ -78,7 +78,7 @@ OPERATIONS: dict[str, Operation] = {
 }
 
 #: Resource query id → the one connection type it serves.
-FOLDER_QUERIES = {"mail_folders_user": "m365_mail_user", "mail_folders_app": "m365_mail_app"}
+FOLDER_QUERIES = {"mail_folders_user": "m365_user", "mail_folders_app": "m365_mail_app"}
 QUERY_IDS = frozenset(FOLDER_QUERIES)
 
 

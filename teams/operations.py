@@ -34,7 +34,7 @@ from .reads import (
 )
 
 SERVICE = "teams"
-USER_TYPE = "m365_teams_user"
+USER_TYPE = "m365_user"
 #: The channel picker reads the channels of at most this many joined teams.
 MAX_PICKER_TEAMS = 50
 

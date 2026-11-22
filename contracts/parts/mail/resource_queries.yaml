@@ -3,7 +3,7 @@
 # connection_type_id. Both list the same folders through list_mail_folders.
 - query_id: mail_folders_user
   operation_id: list_mail_folders
-  connection_type_id: m365_mail_user
+  connection_type_id: m365_user
   display_name: Outlook folders
   description: Well-known folder shortcuts, then every folder of the signed-in user's (or shared) mailbox by path.
   cursor_mode: none

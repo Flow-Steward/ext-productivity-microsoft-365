@@ -23,14 +23,13 @@ from .content import email_subject_and_body, event_content
 
 ACTION_ID = "deliver_notification"
 
-#: Connection type → how a route addresses it (the C1 ``notification`` block).
+#: Connection type → how a route addresses it (the C1 ``notification`` block). A signed-in
+#: account delivers email; Teams channels are reached through the Workflows webhook.
 RECIPIENT = "recipient"
-ROUTE_CHANNEL = "route_channel"
 CONNECTION_CHANNEL = "connection_channel"
 NOTIFICATION_TYPES: dict[str, str] = {
-    "m365_mail_user": RECIPIENT,
+    "m365_user": RECIPIENT,
     "m365_mail_app": RECIPIENT,
-    "m365_teams_user": ROUTE_CHANNEL,
     "m365_teams_webhook": CONNECTION_CHANNEL,
 }
 
@@ -86,7 +85,6 @@ def handle_deliver_notification(
     payload: dict[str, Any],
     *,
     transport_factory: TransportFactory = transport_for,
-    channel_poster: ChannelPoster | None = None,
     webhook_poster: ChannelPoster | None = None,
 ) -> dict[str, Any]:
     try:
@@ -117,10 +115,6 @@ def handle_deliver_notification(
             return _deliver_mail(payload, event, route_config, step_key, transport_factory)
         if route_config.get("to") or route_config.get("recipients"):
             raise _incompatible("A channel connection does not take recipients")
-        if address == ROUTE_CHANNEL:
-            return _deliver_channel(
-                payload, event, route_config, step_key, transport_factory, channel_poster
-            )
         return _deliver_webhook(payload, event, route_config, webhook_poster)
     except M365Error as exc:
         return _failure(exc)
@@ -163,33 +157,6 @@ def _deliver_mail(
     )
 
 
-def _deliver_channel(
-    payload: dict[str, Any],
-    event: Mapping[str, Any],
-    route_config: Mapping[str, Any],
-    step_key: str,
-    transport_factory: TransportFactory,
-    channel_poster: ChannelPoster | None,
-) -> dict[str, Any]:
-    target = text(route_config.get("channel"), limit=512)
-    if not target:
-        raise M365Error(
-            "channel_required", "The route has no Teams channel or chat", retryable=False
-        )
-    context = resolve_connection(payload, service="teams")
-    poster = channel_poster or _default_channel_poster()
-    posted = poster(
-        transport_factory(context), target=target, content=event_content(event), key=step_key
-    )
-    return _result(
-        delivered=True,
-        provider_message_id=str(posted.get("message_id") or ""),
-        confirmation=str(posted.get("confirmation") or "posted"),
-        external_effect_status="succeeded",
-        definitely_no_external_effect=False,
-    )
-
-
 def _deliver_webhook(
     payload: dict[str, Any],
     event: Mapping[str, Any],
@@ -208,12 +175,6 @@ def _deliver_webhook(
         external_effect_status="succeeded",
         definitely_no_external_effect=False,
     )
-
-
-def _default_channel_poster() -> ChannelPoster:
-    from teams.notify import post_notification  # wired after the Teams package lands
-
-    return post_notification
 
 
 def _default_webhook_poster() -> ChannelPoster:

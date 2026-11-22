@@ -1,5 +1,5 @@
 # Fragment for contracts/operation_manifest.yaml (merged by the lead). Task v0.2 D3.
-# Delegated only (m365_teams_user). No required_oauth_scopes: the teams_connect intent
+# Delegated only (m365_user). No required_oauth_scopes: the teams_connect intent
 # requests the delegated scopes. Posts never re-post an ambiguous write: they report
 # timeout_unknown unless the hidden step marker is found (confirmation found_by_marker).
 - operation_id: test_teams_connection
@@ -7,7 +7,7 @@
   description: The signed-in service user and the number of teams they have joined.
   operation_kind: source
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
   outputs:
@@ -23,7 +23,7 @@
   description: Teams the signed-in user has joined.
   operation_kind: source
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
   outputs:
@@ -48,7 +48,7 @@
   description: Channels of one team. Each row has a target (team_id/channel_id), the format of a Teams notification route.
   operation_kind: source
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &team_id_input {name: team_id, value_type: text, required: true, schema: {type: string, minLength: 36, maxLength: 36}}
@@ -78,7 +78,7 @@
   description: The signed-in user's chats, optionally filtered by topic text or by a member's address. Opaque cursor.
   operation_kind: source
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: topic_contains, value_type: text, required: false, schema: {type: string, maxLength: 255}}
@@ -120,7 +120,7 @@
   description: Recent messages of a channel (team_id + channel_id) or a chat (chat_id), newest first, with the text body and sender. System events and deleted messages are skipped. Opaque cursor.
   operation_kind: source
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: team_id, value_type: text, required: false, schema: {type: string, minLength: 36, maxLength: 36}}
@@ -169,7 +169,7 @@
   description: Post a text or HTML message (optional subject, @mentions by address, file links) to a channel as the signed-in service user. Messages above about 28 KB are refused. An unconfirmed post is never repeated; it fails with timeout_unknown unless the step's hidden marker is found.
   operation_kind: action
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: team_id, value_type: text, required: true, schema: {type: string, minLength: 36, maxLength: 36}}
@@ -202,7 +202,7 @@
   description: Reply to a channel message (the thread's root message ID) with a text or HTML body, @mentions and file links. Same size limit and ambiguous-post rule as Post to a Teams channel.
   operation_kind: action
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: team_id, value_type: text, required: true, schema: {type: string, minLength: 36, maxLength: 36}}
@@ -221,7 +221,7 @@
   description: Post to an existing chat (chat_id), or to the 1:1 chat with a user by address (user; Teams reuses the existing 1:1 chat). Same size limit and ambiguous-post rule as Post to a Teams channel.
   operation_kind: action
   category: chat
-  connection_type_ids: [m365_teams_user]
+  connection_type_ids: [m365_user]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *chat_id_input

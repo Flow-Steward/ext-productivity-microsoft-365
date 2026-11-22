@@ -27,7 +27,7 @@ components:
     title: 2. Delegated permissions (signed-in users)
     anchor_id: delegated-permissions
     body: |
-      Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`, and for Teams `User.ReadBasic.All`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChannelMessage.Read.All`, `Chat.ReadWrite`, `ChatMessage.Send`. Each user approves only the service they connect. `ChannelMessage.Read.All` needs an administrator's consent: click *Grant admin consent* once.
+      Under *API permissions → Microsoft Graph → Delegated* add: `User.Read`, `offline_access`, `Mail.ReadWrite`, `Mail.Send`, `Mail.ReadWrite.Shared`, `Mail.Send.Shared`, `Files.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`, and for Teams `User.ReadBasic.All`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChannelMessage.Read.All`, `Chat.ReadWrite`, `ChatMessage.Send`. One sign-in requests all of them, and the same connection then works on every tab. `ChannelMessage.Read.All` needs an administrator's consent, so an administrator clicks *Grant admin consent* once; after that users only sign in.
   - component_id: m365_setup_app_permissions
     type: markdown
     title: 3. Application permissions (organisation app)

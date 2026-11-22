@@ -7,7 +7,7 @@
   description: Mailbox address, display name (own mailbox of a signed-in user only), Inbox total and unread counts.
   operation_kind: source
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
   outputs:
@@ -23,7 +23,7 @@
   description: Well-known folder shortcuts (inbox, archive, sentitems, drafts, deleteditems, junkemail) plus every folder, nested, with its path.
   operation_kind: source
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
   outputs:
@@ -69,7 +69,7 @@
   description: Messages of one folder, newest first, with typed filters, or a free-text query (Graph $search, which cannot be combined with the filters). Opaque cursor.
   operation_kind: source
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: folder, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 1024, default: inbox}}
@@ -117,7 +117,7 @@
   description: One message with its text body (HTML converted by Outlook), optional raw HTML, internet headers and attachment metadata.
   operation_kind: source
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
@@ -134,7 +134,7 @@
   description: One file attachment into an artifact. Attached messages (itemAttachment) and cloud links (referenceAttachment) are refused.
   operation_kind: source
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
@@ -162,7 +162,7 @@
   description: Send as the connection's mailbox through a draft carrying the step's idempotency key. Give the step a retry policy so an attachment_state_unknown failure is retried with a fresh draft.
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &recipients_to {name: to, value_type: array, required: false, schema: {type: array, maxItems: 500}}
@@ -196,7 +196,7 @@
   description: Reply (or reply all) to the original message by its id, with a comment and extra attachments, through the same draft-then-send flow.
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
@@ -211,7 +211,7 @@
   description: Forward the original message by its id to new recipients, with a comment and extra attachments, through the same draft-then-send flow.
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - {name: message_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 1024}}
@@ -228,7 +228,7 @@
   description: Set read state and follow-up flag with absolute values (idempotent).
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - &message_ids_input {name: message_ids, value_type: array, required: true, schema: {type: array, minItems: 1, maxItems: 100, items: {type: string, minLength: 1, maxLength: 1024}}}
@@ -260,7 +260,7 @@
   description: Move to a folder id or well-known name. Returns each message's immutable id; a message already in the destination is success with changed false.
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *message_ids_input
@@ -273,7 +273,7 @@
   description: Moves to Deleted Items only; never deletes permanently. A message already there is success with changed false.
   operation_kind: action
   category: email
-  connection_type_ids: [m365_mail_user, m365_mail_app]
+  connection_type_ids: [m365_user, m365_mail_app]
   inputs:
     - {name: connection_ref, value_type: connection_ref, required: true}
     - *message_ids_input

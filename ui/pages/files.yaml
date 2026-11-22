@@ -4,12 +4,12 @@ description: Connect OneDrive or SharePoint libraries for this project.
 components:
   - component_id: files_user_connections
     type: connection_form
-    title: Drives of signed-in users
-    description: A user signs in with Microsoft. Leave Drive empty for their OneDrive, or enter a SharePoint site URL or a drive ID.
+    title: Microsoft 365 accounts (signed-in users)
+    description: One sign-in per account serves every tab (mail, calendar, files, Excel, Teams). Files use the account's OneDrive, or a SharePoint site or drive set on the connection.
     data:
       oauth_provider_id: m365_oauth
-      connection_type: m365_files_user
-      oauth_intent: files_connect
+      connection_type: m365_user
+      oauth_intent: account_connect
       test_action: test_files_connection
   - ref: ../components/files_app_connection_form.yaml
   - component_id: files_notes

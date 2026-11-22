@@ -528,7 +528,7 @@ actions:
   required_scopes:
   - extension:invoke
   connection_type_ids:
-  - m365_mail_user
+  - m365_user
   - m365_mail_app
   handler:
     mode: extension
@@ -590,14 +590,14 @@ actions:
   required_scopes:
   - extension:invoke
   connection_type_ids:
-  - m365_mail_user
+  - m365_user
   - m365_mail_app
   handler:
     mode: platform
     operation: project_connection_ingress_patch
     config:
       connection_type_ids:
-      - m365_mail_user
+      - m365_user
       - m365_mail_app
       fields:
       - mail_trigger_mode

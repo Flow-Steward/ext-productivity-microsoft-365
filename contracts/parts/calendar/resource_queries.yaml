@@ -3,7 +3,7 @@
 # connection_type_id. Both list the calendars through list_calendars.
 - query_id: calendars_user
   operation_id: list_calendars
-  connection_type_id: m365_calendar_user
+  connection_type_id: m365_user
   display_name: Outlook calendars
   description: The default calendar first, then every other calendar of the signed-in user's (or shared) mailbox.
   cursor_mode: none

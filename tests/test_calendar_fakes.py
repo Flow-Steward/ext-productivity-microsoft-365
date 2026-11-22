@@ -28,7 +28,7 @@ MAILBOX = "cmr@acme.example"
 APP_BASE = f"/users/{MAILBOX}"
 USER_CONNECTION: dict[str, Any] = {
     "connection_id": "conn-acme-calendar",
-    "connection_type_id": "m365_calendar_user",
+    "connection_type_id": "m365_user",
     "config": {},
     "secrets": {"access_token": "opaque-token"},
 }

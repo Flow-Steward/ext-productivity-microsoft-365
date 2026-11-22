@@ -72,5 +72,5 @@ def test_mail_poll_mode_defaults_off() -> None:
 
 def test_oauth_intents_request_files_readwrite_for_files_and_excel() -> None:
     for row in _load("contracts/connection_types.yaml")["connection_types"]:
-        if row["connection_type_id"] in {"m365_files_user", "m365_excel_user"}:
+        if row["connection_type_id"] in {"m365_user", "m365_user"}:
             assert "Files.ReadWrite" in row["auth"]["scopes"]["required"]

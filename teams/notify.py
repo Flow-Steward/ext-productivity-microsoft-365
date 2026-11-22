@@ -1,6 +1,6 @@
 """Teams side of ``deliver_notification`` (task D4), called by ``notify.deliver``.
 
-* :func:`post_notification`: ``m365_teams_user`` routes. ``target`` is the route's
+* :func:`post_notification`: ``m365_user`` routes. ``target`` is the route's
   ``channel`` (``team_id/channel_id`` or a chat id); ``key`` is Core's idempotency key.
   The post follows :mod:`teams.posting`: never repeated, ``timeout_unknown`` unless the
   hidden marker is found.

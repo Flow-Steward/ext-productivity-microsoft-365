@@ -11,7 +11,7 @@
   # declares no action-level provider secrets: a delegated connection gets its
   # refreshed OAuth token, an app-only connection its own client_secret.
   connection_type_ids:
-  - m365_mail_user
+  - m365_user
   - m365_mail_app
   handler:
     mode: extension
@@ -79,14 +79,14 @@
   # Applies to the selected mail connection (target.connection_id); its type is
   # kept. See docs/TRIGGER_CONTRACT.md, "Settings save".
   connection_type_ids:
-  - m365_mail_user
+  - m365_user
   - m365_mail_app
   handler:
     mode: platform
     operation: project_connection_ingress_patch
     config:
       connection_type_ids:
-      - m365_mail_user
+      - m365_user
       - m365_mail_app
       fields:
       - mail_trigger_mode

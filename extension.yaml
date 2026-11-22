@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.microsoft-365
 kind: notification_provider
-version: 0.2.1
+version: 0.2.2
 display_name: Microsoft 365
 description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams
   for project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in
@@ -311,43 +311,7 @@ runtime:
         client_auth_method: client_secret_post
       callback_id: oauth_authorization
       authorization_intents:
-      - intent_id: mail_connect
-        static_parameters:
-          prompt: select_account
-        user_inputs:
-        - input_id: email_hint
-          parameter: login_hint
-          validation:
-            type: email
-            max_length: 320
-      - intent_id: files_connect
-        static_parameters:
-          prompt: select_account
-        user_inputs:
-        - input_id: email_hint
-          parameter: login_hint
-          validation:
-            type: email
-            max_length: 320
-      - intent_id: excel_connect
-        static_parameters:
-          prompt: select_account
-        user_inputs:
-        - input_id: email_hint
-          parameter: login_hint
-          validation:
-            type: email
-            max_length: 320
-      - intent_id: calendar_connect
-        static_parameters:
-          prompt: select_account
-        user_inputs:
-        - input_id: email_hint
-          parameter: login_hint
-          validation:
-            type: email
-            max_length: 320
-      - intent_id: teams_connect
+      - intent_id: account_connect
         static_parameters:
           prompt: select_account
         user_inputs:

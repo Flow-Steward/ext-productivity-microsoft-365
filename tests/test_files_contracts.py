@@ -10,7 +10,7 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 PARTS = Path(__file__).resolve().parents[1] / "contracts" / "parts" / "files"
-FILES_TYPES = ["m365_files_user", "m365_files_app"]
+FILES_TYPES = ["m365_user", "m365_files_app"]
 
 
 def _load(name: str) -> list[dict[str, Any]]:

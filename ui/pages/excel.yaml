@@ -4,12 +4,12 @@ description: Connect a signed-in user for Excel workbooks in OneDrive for Busine
 components:
   - component_id: excel_user_connections
     type: connection_form
-    title: Excel accounts
-    description: A user signs in once. Workflows then read and write workbooks in the background; Flow Steward refreshes the access.
+    title: Microsoft 365 accounts (signed-in users)
+    description: One sign-in per account serves every tab (mail, calendar, files, Excel, Teams). Excel works only through a signed-in account; workflows then read and write workbooks in the background.
     data:
       oauth_provider_id: m365_oauth
-      connection_type: m365_excel_user
-      oauth_intent: excel_connect
+      connection_type: m365_user
+      oauth_intent: account_connect
   - component_id: excel_notes
     type: markdown
     title: Choosing a workbook

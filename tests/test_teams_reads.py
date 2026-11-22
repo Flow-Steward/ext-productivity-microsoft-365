@@ -91,8 +91,17 @@ def test_connection_without_a_token_is_authorization_required() -> None:
     assert response["error_code"] == "authorization_required"
 
 
-def test_a_mail_connection_is_refused_for_teams_operations() -> None:
-    connection = {**USER_CONNECTION, "connection_type_id": "m365_mail_user"}
+def test_a_mail_app_connection_is_refused_for_teams_operations() -> None:
+    connection = {
+        "connection_id": "conn-x",
+        "connection_type_id": "m365_mail_app",
+        "config": {
+            "tenant_id": "acme.onmicrosoft.com",
+            "client_id": "11111111-2222-3333-4444-555555555555",
+            "mailbox": "cmr@acme.example",
+        },
+        "secrets": {"client_secret": "app-secret"},
+    }
     response = _run(ScriptedGraph(), "list_teams", connection=connection)
     assert response["error_code"] == "invalid_connection"
 
@@ -364,7 +373,16 @@ def test_chats_picker_matches_member_names() -> None:
 
 
 def test_queries_refuse_other_connection_types_and_unknown_ids() -> None:
-    mail = {**USER_CONNECTION, "connection_type_id": "m365_mail_user"}
+    mail = {
+        "connection_id": "conn-x",
+        "connection_type_id": "m365_mail_app",
+        "config": {
+            "tenant_id": "acme.onmicrosoft.com",
+            "client_id": "11111111-2222-3333-4444-555555555555",
+            "mailbox": "cmr@acme.example",
+        },
+        "secrets": {"client_secret": "app-secret"},
+    }
     assert (
         _query(ScriptedGraph(), "teams_user", connection=mail)["error_code"] == "invalid_connection"
     )

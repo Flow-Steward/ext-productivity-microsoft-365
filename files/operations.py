@@ -2,7 +2,7 @@
 
 Both connection types share every operation:
 
-- ``m365_files_user`` (delegated): config ``drive_target`` (empty = own OneDrive, a
+- ``m365_user`` (delegated): config ``drive_target`` (empty = own OneDrive, a
   SharePoint site URL = the site's default library, or a drive ID);
 - ``m365_files_app`` (app-only, ``Sites.Selected`` or ``Files.ReadWrite.All``): config
   ``tenant_id``, ``client_id``, ``site_url`` and ``drive_id``.
@@ -32,7 +32,7 @@ from . import drives, items, paths, transfer
 from .drives import DriveTarget
 
 SERVICE = "files"
-USER_TYPE = "m365_files_user"
+USER_TYPE = "m365_user"
 APP_TYPE = "m365_files_app"
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 200

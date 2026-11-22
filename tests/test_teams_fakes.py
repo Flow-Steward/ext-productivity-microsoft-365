@@ -22,7 +22,7 @@ CHAT_ID = (
 )
 USER_CONNECTION: dict[str, Any] = {
     "connection_id": "conn-acme-teams",
-    "connection_type_id": "m365_teams_user",
+    "connection_type_id": "m365_user",
     "config": {},
     "secrets": {"access_token": "opaque-token"},
 }

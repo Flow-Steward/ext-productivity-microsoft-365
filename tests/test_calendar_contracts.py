@@ -16,7 +16,7 @@ from mail.send import KEY_PROPERTY_ID, PROPERTY_SET_GUID
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = ROOT / "contracts" / "parts" / "calendar"
-CALENDAR_TYPES = ["m365_calendar_user", "m365_calendar_app"]
+CALENDAR_TYPES = ["m365_user", "m365_calendar_app"]
 EFFECTFUL = {op for op, row in OPERATIONS.items() if row.effectful}
 
 
@@ -42,7 +42,7 @@ def test_registry_covers_task_d2() -> None:
     assert EFFECTFUL == {"create_event", "update_event", "cancel_event", "respond_to_event"}
     assert all(row.service == "calendar" for row in OPERATIONS.values())
     assert {CONNECTION_TYPES[t] for t in CALENDAR_TYPES} == {
-        ("calendar", "user"),
+        ("*", "user"),
         ("calendar", "app"),
     }
 
