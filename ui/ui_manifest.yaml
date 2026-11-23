@@ -2,6 +2,7 @@ version: "1"
 pages:
   - ref: pages/setup-guide.yaml
   - ref: pages/mail.yaml
+  - ref: pages/mail-trigger.yaml
   - ref: pages/files.yaml
   - ref: pages/excel.yaml
   - ref: pages/calendar.yaml

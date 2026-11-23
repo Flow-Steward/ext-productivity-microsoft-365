@@ -1,0 +1,17 @@
+page_id: mail-trigger
+title: New-email trigger
+description: Switch the New Outlook email workflow trigger on or off for each connected mailbox.
+connection:
+  connection_type_ids: [m365_user, m365_mail_app]
+components:
+  - component_id: mail_trigger_intro
+    type: markdown
+    title: How it works
+    body: |
+      Choose the mailbox at the top of the page, then switch its trigger on or off. It is **off** for every mailbox until you switch it on.
+
+      - When it is on, Flow Steward checks the folder every minute and starts each bound workflow **once** for every new email. A crash or restart does not lose or repeat one.
+      - Only email received **after** it was switched on is delivered. Mail that arrives while it is off is never delivered later.
+      - To check mail **on your own schedule or by hand** instead, leave the trigger off and run a workflow on a schedule, or with *Run*, whose first step is *Search messages*. Mark what it processed as read, or move it, so the next run does not take it again.
+  - ref: ../components/mail_trigger_form.yaml
+  - ref: ../components/mail_trigger_status.yaml

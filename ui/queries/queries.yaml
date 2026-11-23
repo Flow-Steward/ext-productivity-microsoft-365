@@ -1,0 +1,23 @@
+# Page queries (v0.2.7). They run with the mail connection chosen in the platform's
+# selector at the top of the page (ADR 0067).
+queries:
+  - query_id: mail_trigger_settings
+    title: New-email trigger settings
+    description: Whether the new-email trigger is on for the chosen mailbox, which folder it watches, and its last check.
+    required_scopes:
+      - extension:invoke
+    connection:
+      connection_type_ids: [m365_user, m365_mail_app]
+    handler:
+      mode: extension
+      config:
+        runtime_resources:
+          project_connection: true
+    result_fields:
+      - values.mail_trigger_mode
+      - values.mail_trigger_folder
+      - items
+    error_codes:
+      - invalid_connection
+      - invalid_payload
+      - internal_error

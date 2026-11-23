@@ -23,6 +23,8 @@ from m365.runtime import run_operation
 from mail.operations import OPERATIONS as MAIL_OPERATIONS
 from mail.operations import QUERY_IDS as MAIL_QUERY_IDS
 from mail.operations import handle_query as handle_mail_query
+from mail_sync.settings_query import QUERY_ID as TRIGGER_SETTINGS_QUERY_ID
+from mail_sync.settings_query import handle_trigger_settings_query
 from mail_sync.poll import handle_poll_mailbox
 from teams.operations import OPERATIONS as TEAMS_OPERATIONS
 from teams.operations import QUERY_IDS as TEAMS_QUERY_IDS
@@ -48,6 +50,7 @@ QUERY_HANDLERS: dict[str, RuntimeHandler] = {
     **dict.fromkeys(EXCEL_QUERY_IDS, handle_excel_query),
     **dict.fromkeys(CALENDAR_QUERY_IDS, handle_calendar_query),
     **dict.fromkeys(TEAMS_QUERY_IDS, handle_teams_query),
+    TRIGGER_SETTINGS_QUERY_ID: handle_trigger_settings_query,
 }
 
 _REGISTRIES = (

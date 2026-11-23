@@ -180,8 +180,12 @@ The extension is a notification provider with two kinds of connection types:
 
 ## New Outlook email trigger
 
-- **Off** for every mailbox until switched on (Mail tab). Checks the chosen folder
-  every 60 s (minimum 30 s).
+- **Off** for every mailbox until switched on on the **New-email trigger** page:
+  choose the mailbox at the top, set *Trigger* to *On* and save. The folder defaults
+  to the inbox. It checks the folder every 60 s.
+- To check mail on your own schedule or by hand instead, leave the trigger off and
+  run a workflow on a schedule, or with *Run*, that starts with *Search messages*;
+  mark or move what it processed so the next run does not take it again.
 - One workflow watches one mailbox; for two mailboxes, create two workflows. The
   trigger filters only by exact sender (`from`). Put "subject contains" in a workflow
   condition.

@@ -4,7 +4,7 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.microsoft-365
 kind: notification_provider
-version: 0.2.5
+version: 0.2.7
 display_name: Microsoft 365
 description: Outlook mail and calendar, OneDrive / SharePoint files, Excel workbooks and Microsoft Teams
   for project workflows through Microsoft Graph, plus Flow Steward notifications by Outlook email or in
@@ -267,6 +267,9 @@ runtime_grants:
       scope: owning_extension
 runtime:
   contract_version: extension_host_v2
+  # 0.2.7: the trigger page's query runs with the chosen mail connection (ADR 0067).
+  compatibility:
+    platform_min: 1.7.0
   extension_contract_v2:
     oauth_providers:
     - provider_id: m365_oauth
@@ -417,6 +420,7 @@ health:
   timeout_seconds: 5
 ui_manifest: ui/ui_manifest.yaml
 action_manifest: ui/actions/actions.yaml
+query_manifest: ui/queries/queries.yaml
 callbacks:
 - callback_id: oauth_authorization
   purpose: oauth_authorization

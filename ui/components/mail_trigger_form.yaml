@@ -1,0 +1,45 @@
+# v0.2.7: the switch of the new-email trigger for the mailbox chosen at the top of
+# the page. Loads mail_trigger_settings and saves through save_trigger_settings.
+# There is no interval field: the check runs every minute, and a workflow on a
+# schedule covers any other rhythm.
+component_id: mail_trigger_form
+anchor_id: mail_trigger_form
+type: form
+title: New-email trigger
+description: Switch the trigger on or off for the mailbox chosen at the top of the page.
+ui_schema:
+  version: '1'
+  type: form_ui
+  layout:
+    columns: 1
+  sections:
+  - section_id: trigger
+    title: New-email trigger
+    variant: card
+    field_ids:
+    - mail_trigger_mode
+    - mail_trigger_folder
+  fields:
+  - field_id: mail_trigger_mode
+    path: mail_trigger_mode
+    widget: select
+    section_id: trigger
+    label: Trigger
+    help: On checks the folder every minute and starts the bound workflows once for each new email. Off stops it; mail that arrives while it is off is never delivered later.
+    props:
+      options:
+      - label: 'Off'
+        value: 'off'
+      - label: 'On'
+        value: polling
+  - field_id: mail_trigger_folder
+    path: mail_trigger_folder
+    widget: text
+    section_id: trigger
+    label: Folder
+    help: inbox, or a folder ID from the Get folders action. Changing the folder starts a fresh sync.
+  actions:
+    save_label: Save trigger settings
+data:
+  load_query: mail_trigger_settings
+  save_action: save_trigger_settings

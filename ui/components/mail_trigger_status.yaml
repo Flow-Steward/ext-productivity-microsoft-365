@@ -1,0 +1,17 @@
+component_id: mail_trigger_status
+type: grid
+title: Trigger status
+query_id: mail_trigger_settings
+columns:
+- key: trigger
+  label: Trigger
+  type: badge
+  badge_map:
+    'On': green
+    'Off': gray
+- key: folder
+  label: Folder
+  type: text
+- key: last_check
+  label: Last check
+  type: text

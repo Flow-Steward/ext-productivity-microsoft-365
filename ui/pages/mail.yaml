@@ -16,7 +16,7 @@ components:
     type: markdown
     title: New-email trigger
     body: |
-      The *New Outlook email* workflow trigger is **off** for every mailbox until you switch it on for that mailbox. When it is switched on, Flow Steward checks the chosen folder every minute (at least every 30 seconds).
+      The *New Outlook email* workflow trigger is **off** for every mailbox until you switch it on for that mailbox on the **New-email trigger** page. When it is switched on, Flow Steward checks the chosen folder every minute.
 
       - Only email received **after** the first check is delivered. Mail received while the trigger is off is never delivered.
       - Each new email starts the workflow once. A crash or restart does not lose or repeat it.
