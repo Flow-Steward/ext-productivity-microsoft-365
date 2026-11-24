@@ -14,7 +14,7 @@ jobs:
   tag:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: The tag must match extension.yaml
         run: |
           version=$(sed -n 's/^version:[[:space:]]*//p' extension.yaml | tr -d "'\"")
@@ -29,7 +29,7 @@ jobs:
     needs: ci
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist
